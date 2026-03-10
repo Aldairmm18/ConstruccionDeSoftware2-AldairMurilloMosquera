@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -15,8 +15,8 @@ public class Transfer {
     private String sourceAccount;
     private String targetAccount;
     private double amount;
-    private LocalDateTime creationDate;
-    private LocalDateTime approvalDate;
+    private Timestamp creationDate;
+    private Timestamp approvalDate;
     private TransferStatus transferStatus;
     private long creatorUserId;
     private Long approverUserId;
