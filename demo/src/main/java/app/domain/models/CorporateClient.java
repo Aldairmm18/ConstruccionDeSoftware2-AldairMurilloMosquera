@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CorporateClient extends Client {
+public class CorporateClient {
 
     private String businessName;
     private String nit;
