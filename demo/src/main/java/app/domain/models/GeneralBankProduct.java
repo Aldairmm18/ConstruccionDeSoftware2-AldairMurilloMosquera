@@ -11,6 +11,6 @@ public class GeneralBankProduct {
 
     private String productCode;
     private String productName;
-    private Category category;
+    private Category Category;
     private boolean requiresApproval;
 }
