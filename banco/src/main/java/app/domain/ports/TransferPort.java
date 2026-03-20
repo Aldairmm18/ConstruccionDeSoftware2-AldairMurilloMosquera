@@ -10,4 +10,8 @@ public interface TransferPort {
   Transfer findById(Long id);
 
   List<Transfer> findAll();
+
+  List<Transfer> findBySourceAccount(String sourceAccount);
+  List<Transfer> findByTargetAccount(String targetAccount);
+  List<Transfer> findByTransferStatus(app.domain.models.TransferStatus transferStatus);
 }

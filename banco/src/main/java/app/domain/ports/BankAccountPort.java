@@ -10,4 +10,8 @@ public interface BankAccountPort {
   BankAccount findById(Long id);
 
   List<BankAccount> findAll();
+
+  BankAccount findByAccountNumber(String accountNumber);
+  boolean existsByAccountNumber(String accountNumber);
+  List<BankAccount> findByClientId(Long clientId);
 }

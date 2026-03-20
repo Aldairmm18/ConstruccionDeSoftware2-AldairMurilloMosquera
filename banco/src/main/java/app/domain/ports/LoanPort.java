@@ -10,4 +10,7 @@ public interface LoanPort {
   Loan findById(Long id);
 
   List<Loan> findAll();
+
+  List<Loan> findByRequestingClientId(Long requestingClientId);
+  List<Loan> findByLoanStatus(app.domain.models.LoanStatus loanStatus);
 }

@@ -10,4 +10,8 @@ public interface ClientPort {
   Client findById(Long id);
 
   List<Client> findAll();
+
+  boolean existsByDocument(String document);
+  Client findByDocument(String document);
+  boolean existsByEmail(String email);
 }
