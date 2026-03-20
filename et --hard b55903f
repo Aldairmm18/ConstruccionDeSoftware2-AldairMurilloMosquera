@@ -1,0 +1,18 @@
+[33m5dffbc2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdeveloped[m[33m, [m[1;31morigin/developed[m[33m)[m HEAD@{0}: commit: Avances hasta que se logro el primer post Sin servicios melos
+[33md3c6ea0[m HEAD@{1}: reset: moving to d3c6ea0
+[33m097e661[m HEAD@{2}: commit: Avances hasta el primer post
+[33m8e19804[m HEAD@{3}: reset: moving to HEAD~3
+[33mb55903f[m HEAD@{4}: reset: moving to HEAD~3
+[33mcedd9d6[m HEAD@{5}: commit: .
+[33m9aa8b4a[m HEAD@{6}: commit: .
+[33m9876165[m HEAD@{7}: commit: .
+[33mb55903f[m HEAD@{8}: commit: Avances en clases. profe Correcion
+[33ma8126c4[m HEAD@{9}: checkout: moving from developed to developed
+[33ma8126c4[m HEAD@{10}: commit: Avances en clases. profe
+[33mc8d112e[m HEAD@{11}: commit: Refactor: LocalDateTime to java.sql.Timestamp + create DetailData class
+[33m8e19804[m HEAD@{12}: commit: Move domain model source files into demo Maven project structure
+[33m0815173[m HEAD@{13}: checkout: moving from main to developed
+[33mcadcb83[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{14}: commit: Clean main branch - development moved to developed branch
+[33m0815173[m HEAD@{15}: checkout: moving from main to main
+[33m0815173[m HEAD@{16}: commit: Add domain models and project structure
+[33mc89facb[m HEAD@{17}: clone: from https://github.com/Aldairmm18/ConstruccionDeSofware2-AldairMurillo.git
