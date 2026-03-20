@@ -1,0 +1,9 @@
+package app.domain.models;
+
+public enum SystemRole {
+  TELLER_EMPLOYEE,
+  COMMERCIAL_EMPLOYEE,
+  INTERNAL_ANALYST,
+  CORPORATE_EMPLOYEE,
+  CORPORATE_SUPERVISOR
+}
