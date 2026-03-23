@@ -35,16 +35,16 @@ Ninguna penalización aplicable.
 
 ## Bonus
 
-| Bonus | Puntos |
+| Bonus | % |
 |---|---|
-| Código limpio (arquitectura hexagonal bien aplicada, separación clara de capas) | +2 |
-| Nombres claros y consistentes (inglés, camelCase, nombres semánticos) | +1 |
+| Código limpio (arquitectura hexagonal bien aplicada, separación clara de capas) | +2% |
+| Nombres claros y consistentes (inglés, camelCase, nombres semánticos) | +1% |
 
-Nota con bonus: 4.25 + 3 = 7.25 → **cap en 5.0**
+Nota con bonus: 4.25 × 1.03 = **4.38**
 
 ---
 
-## Nota Final: **5.0 / 5.0**
+## Nota Final: **4.4 / 5.0**
 
 ---
 
