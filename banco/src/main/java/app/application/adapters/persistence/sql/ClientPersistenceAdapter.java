@@ -2,7 +2,7 @@ package app.application.adapters.persistence.sql;
 
 import app.application.adapters.persistence.sql.entities.ClientEntity;
 import app.application.adapters.persistence.sql.repositories.ClientRepository;
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.ports.ClientPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class ClientPersistenceAdapter implements ClientPort {
   private final ClientRepository clientRepository;
 
   @Override
-  public Client save(Client client) {
+  public PersonClient save(PersonClient client) {
     ClientEntity entity = toEntity(client);
     if (entity != null && (entity.getId() == null || entity.getId() == 0L)) {
       entity.setId(null);
@@ -25,12 +25,12 @@ public class ClientPersistenceAdapter implements ClientPort {
   }
 
   @Override
-  public Client findById(Long id) {
+  public PersonClient findById(Long id) {
     return clientRepository.findById(id).map(this::toModel).orElse(null);
   }
 
   @Override
-  public List<Client> findAll() {
+  public List<PersonClient> findAll() {
     return clientRepository.findAll().stream().map(this::toModel).toList();
   }
 
@@ -40,7 +40,7 @@ public class ClientPersistenceAdapter implements ClientPort {
   }
 
   @Override
-  public Client findByDocument(String document) {
+  public PersonClient findByDocument(String document) {
     return clientRepository.findByDocument(document).map(this::toModel).orElse(null);
   }
 
@@ -49,7 +49,7 @@ public class ClientPersistenceAdapter implements ClientPort {
     return clientRepository.existsByEmail(email);
   }
 
-  private ClientEntity toEntity(Client model) {
+  private ClientEntity toEntity(PersonClient model) {
     if (model == null) return null;
     ClientEntity entity = new ClientEntity();
     entity.setId(model.getId());
@@ -62,9 +62,9 @@ public class ClientPersistenceAdapter implements ClientPort {
     return entity;
   }
 
-  private Client toModel(ClientEntity entity) {
+  private PersonClient toModel(ClientEntity entity) {
     if (entity == null) return null;
-    Client model = new Client();
+    PersonClient model = new PersonClient();
     model.setId(entity.getId());
     model.setName(entity.getName());
     model.setDocument(entity.getDocument());

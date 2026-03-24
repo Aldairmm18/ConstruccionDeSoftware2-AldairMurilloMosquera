@@ -2,7 +2,7 @@ package app.interfaces.controllers;
 
 import app.application.usecases.AccountManagementUseCase;
 import app.domain.models.BankAccount;
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.ports.BankAccountPort;
 import app.interfaces.controllers.requests.AccountRequest;
 import jakarta.validation.Valid;
@@ -53,7 +53,7 @@ public class BankAccountController {
     account.setOpeningDate(java.time.LocalDate.now());
     
     if (request.getClientId() != null) {
-        Client client = new Client();
+        PersonClient client = new PersonClient();
         client.setId(request.getClientId());
         account.setClient(client);
     }

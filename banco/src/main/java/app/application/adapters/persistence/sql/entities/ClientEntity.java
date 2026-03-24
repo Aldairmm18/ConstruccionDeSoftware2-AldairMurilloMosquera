@@ -1,6 +1,6 @@
 package app.application.adapters.persistence.sql.entities;
 
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -21,7 +21,7 @@ public class ClientEntity extends PersonEntity {
   @Column(name = "birth_date", nullable = false)
   private LocalDate birthDate;
 
-  public static ClientEntity fromDomain(Client client) {
+  public static ClientEntity fromDomain(PersonClient client) {
     if (client == null) {
       return null;
     }
@@ -36,8 +36,8 @@ public class ClientEntity extends PersonEntity {
     return entity;
   }
 
-  public Client toDomain() {
-    Client client = new Client();
+  public PersonClient toDomain() {
+    PersonClient client = new PersonClient();
     client.setId(getId());
     client.setName(getName());
     client.setDocument(getDocument());

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Client extends Person {
+public class PersonClient extends Person {
 
   private LocalDate birthDate;
 }

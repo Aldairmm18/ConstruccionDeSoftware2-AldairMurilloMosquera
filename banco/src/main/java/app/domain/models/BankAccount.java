@@ -19,5 +19,5 @@ public class BankAccount {
   private Currency currency;
   private Double currentBalance;
   private LocalDate openingDate;
-  private Client client;
+  private PersonClient client;
 }

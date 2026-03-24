@@ -1,6 +1,6 @@
 package app.application.usecases;
 
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.models.CorporateClient;
 import app.domain.ports.ClientPort;
 import app.domain.services.ClientDomainService;
@@ -15,7 +15,7 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
     private final ClientDomainService clientDomainService;
 
     @Override
-    public Client createNaturalClient(Client client) {
+    public PersonClient createNaturalClient(PersonClient client) {
         clientDomainService.validateClientCreation(client);
         return clientPort.save(client);
     }

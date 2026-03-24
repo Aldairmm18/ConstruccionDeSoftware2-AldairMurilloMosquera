@@ -1,7 +1,7 @@
 package app.interfaces.controllers;
 
 import app.application.usecases.ClientManagementUseCase;
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.ports.ClientPort;
 import app.interfaces.controllers.requests.ClientRequest;
 import jakarta.validation.Valid;
@@ -20,15 +20,15 @@ public class ClientController {
   private final ClientPort clientPort;
 
   @PostMapping
-  public ResponseEntity<Client> create(@Valid @RequestBody ClientRequest request) {
-    Client client = toModel(request);
-    Client createdClient = clientManagementUseCase.createNaturalClient(client);
+  public ResponseEntity<PersonClient> create(@Valid @RequestBody ClientRequest request) {
+    PersonClient client = toModel(request);
+    PersonClient createdClient = clientManagementUseCase.createNaturalClient(client);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdClient);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Client> findById(@PathVariable Long id) {
-    Client client = clientPort.findById(id);
+  public ResponseEntity<PersonClient> findById(@PathVariable Long id) {
+    PersonClient client = clientPort.findById(id);
     if (client == null) {
       return ResponseEntity.notFound().build();
     }
@@ -36,12 +36,12 @@ public class ClientController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Client>> findAll() {
+  public ResponseEntity<List<PersonClient>> findAll() {
     return ResponseEntity.ok(clientPort.findAll());
   }
 
-  private Client toModel(ClientRequest request) {
-    Client client = new Client();
+  private PersonClient toModel(ClientRequest request) {
+    PersonClient client = new PersonClient();
     client.setName(request.getName());
     client.setDocument(request.getDocument());
     client.setEmail(request.getEmail());

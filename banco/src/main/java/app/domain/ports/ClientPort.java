@@ -1,17 +1,17 @@
 package app.domain.ports;
 
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import java.util.List;
 
 public interface ClientPort {
 
-  Client save(Client client);
+  PersonClient save(PersonClient client);
 
-  Client findById(Long id);
+  PersonClient findById(Long id);
 
-  List<Client> findAll();
+  List<PersonClient> findAll();
 
   boolean existsByDocument(String document);
-  Client findByDocument(String document);
+  PersonClient findByDocument(String document);
   boolean existsByEmail(String email);
 }

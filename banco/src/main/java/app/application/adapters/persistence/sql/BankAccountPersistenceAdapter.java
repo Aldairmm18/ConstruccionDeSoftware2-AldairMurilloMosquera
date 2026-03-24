@@ -4,7 +4,7 @@ import app.application.adapters.persistence.sql.entities.BankAccountEntity;
 import app.application.adapters.persistence.sql.entities.ClientEntity;
 import app.application.adapters.persistence.sql.repositories.BankAccountRepository;
 import app.domain.models.BankAccount;
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.ports.BankAccountPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +88,7 @@ public class BankAccountPersistenceAdapter implements BankAccountPort {
     model.setOpeningDate(entity.getOpeningDate());
     
     if (entity.getClient() != null) {
-      Client client = new Client();
+      PersonClient client = new PersonClient();
       client.setId(entity.getClient().getId());
       client.setName(entity.getClient().getName());
       client.setDocument(entity.getClient().getDocument());

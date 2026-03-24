@@ -6,7 +6,7 @@ import app.application.adapters.persistence.sql.entities.ClientEntity;
 import app.application.adapters.persistence.sql.repositories.TransferRepository;
 import app.domain.models.Transfer;
 import app.domain.models.BankAccount;
-import app.domain.models.Client;
+import app.domain.models.PersonClient;
 import app.domain.ports.TransferPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -113,7 +113,7 @@ public class TransferPersistenceAdapter implements TransferPort {
     model.setCurrentBalance(entity.getCurrentBalance());
     model.setOpeningDate(entity.getOpeningDate());
     if (entity.getClient() != null) {
-        Client c = new Client();
+        PersonClient c = new PersonClient();
         c.setId(entity.getClient().getId());
         c.setName(entity.getClient().getName());
         model.setClient(c);
