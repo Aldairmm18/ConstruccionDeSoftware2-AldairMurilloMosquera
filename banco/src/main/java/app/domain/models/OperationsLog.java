@@ -1,6 +1,8 @@
 package app.domain.models;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,5 +21,5 @@ public class OperationsLog {
   private Long affectedProductId;
   private Long userId;
   private SystemRole userRole;
-  private Long detailDataId;
+  private Map<String, Object> detailData = new HashMap<>();
 }

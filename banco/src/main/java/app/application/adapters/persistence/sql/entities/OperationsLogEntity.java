@@ -9,7 +9,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +39,8 @@ public class OperationsLogEntity {
   @Enumerated(EnumType.STRING)
   private SystemRole userRole;
 
-  private Long detailDataId;
+  @Transient
+  private Map<String, Object> detailData = new HashMap<>();
 
   public static OperationsLogEntity fromDomain(OperationsLog log) {
     if (log == null) {
@@ -50,7 +54,7 @@ public class OperationsLogEntity {
     entity.setAffectedProductId(log.getAffectedProductId());
     entity.setUserId(log.getUserId());
     entity.setUserRole(log.getUserRole());
-    entity.setDetailDataId(log.getDetailDataId());
+    entity.setDetailData(log.getDetailData());
     return entity;
   }
 
@@ -63,7 +67,7 @@ public class OperationsLogEntity {
     log.setAffectedProductId(getAffectedProductId());
     log.setUserId(getUserId());
     log.setUserRole(getUserRole());
-    log.setDetailDataId(getDetailDataId());
+    log.setDetailData(getDetailData());
     return log;
   }
 }
