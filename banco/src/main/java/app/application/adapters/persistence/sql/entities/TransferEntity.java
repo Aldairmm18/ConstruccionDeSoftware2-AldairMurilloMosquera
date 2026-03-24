@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,7 +40,7 @@ public class TransferEntity {
   private BankAccountEntity targetAccount;
 
   @Column(name = "amount", nullable = false)
-  private Double amount;
+  private BigDecimal amount;
 
   @Column(name = "transfer_status", nullable = false)
   @Enumerated(EnumType.STRING)

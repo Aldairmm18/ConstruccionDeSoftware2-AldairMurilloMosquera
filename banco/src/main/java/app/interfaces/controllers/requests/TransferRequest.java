@@ -16,5 +16,5 @@ public class TransferRequest {
     private String targetAccount;
 
     @Positive(message = "El monto debe ser numéricamente positivo")
-    private Double amount;
+    private BigDecimal amount;
 }

@@ -14,7 +14,7 @@ public class LoanRequest {
     private Long requestingClientId;
 
     @Positive(message = "El monto solicitado debe ser numéricamente positivo")
-    private Double requestedAmount;
+    private BigDecimal requestedAmount;
 
     @Min(value = 1, message = "El plazo en meses debe ser de al menos 1")
     private Integer termMonths;

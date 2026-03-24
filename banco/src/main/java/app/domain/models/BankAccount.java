@@ -1,5 +1,6 @@
 package app.domain.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class BankAccount {
   private AccountType accountType;
   private AccountStatus accountStatus;
   private Currency currency;
-  private Double currentBalance;
+  private BigDecimal currentBalance;
   private LocalDate openingDate;
   private PersonClient client;
 }

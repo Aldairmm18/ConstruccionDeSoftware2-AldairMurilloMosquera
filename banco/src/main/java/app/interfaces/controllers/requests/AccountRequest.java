@@ -19,5 +19,5 @@ public class AccountRequest {
     private Long clientId;
 
     private String accountNumber;
-    private Double currentBalance;
+    private BigDecimal currentBalance;
 }

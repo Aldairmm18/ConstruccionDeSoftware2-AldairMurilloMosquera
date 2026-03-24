@@ -1,5 +1,6 @@
 package app.domain.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +16,7 @@ public class Transfer {
   private Long transferId;
   private BankAccount sourceAccount;
   private BankAccount targetAccount;
-  private Double amount;
+  private BigDecimal amount;
   private TransferStatus transferStatus;
   private LocalDateTime creationDate;
   private LocalDateTime approvalDate;

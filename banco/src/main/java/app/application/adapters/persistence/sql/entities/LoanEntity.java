@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,10 +44,10 @@ public class LoanEntity {
   private LoanStatus loanStatus;
 
   @Column(name = "requested_amount", nullable = false)
-  private Double requestedAmount;
+  private BigDecimal requestedAmount;
 
   @Column(name = "approved_amount")
-  private Double approvedAmount;
+  private BigDecimal approvedAmount;
 
   @Column(name = "interest_rate")
   private Double interestRate;

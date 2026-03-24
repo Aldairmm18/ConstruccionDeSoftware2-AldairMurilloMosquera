@@ -1,5 +1,6 @@
 package app.domain.models;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,8 +17,8 @@ public class Loan {
   private Long requestingClientId;
   private LoanType loanType;
   private LoanStatus loanStatus;
-  private Double requestedAmount;
-  private Double approvedAmount;
+  private BigDecimal requestedAmount;
+  private BigDecimal approvedAmount;
   private Double interestRate;
   private int termMonths;
   private LocalDate approvalDate;

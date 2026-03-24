@@ -2,6 +2,7 @@ package app.domain.services;
 
 import app.domain.models.Transfer;
 import app.domain.Exceptions.BusinessException;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,7 +16,7 @@ public class TransferDomainService {
             transfer.getSourceAccount().getAccountNumber().equals(transfer.getTargetAccount().getAccountNumber())) {
             throw new BusinessException("La cuenta origen y destino no pueden ser iguales.");
         }
-        if (transfer.getAmount() == null || transfer.getAmount() <= 0) {
+        if (transfer.getAmount() == null || transfer.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("El monto a transferir debe ser mayor a 0.");
         }
     }
