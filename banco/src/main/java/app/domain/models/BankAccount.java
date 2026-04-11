@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import app.domain.Exceptions.InvalidAmountException;
+import app.domain.Exceptions.InsufficientFundsException;
 
 @Getter
 @Setter
@@ -23,9 +25,36 @@ public class BankAccount {
     private PersonClient client;
 
     public void setCurrentBalance(BigDecimal currentBalance) {
-        if (currentBalance != null && currentBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Account balance cannot be negative");
+        if (currentBalance == null) {
+            throw new IllegalArgumentException("Saldo no puede ser nulo");
+        }
+        if (currentBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientFundsException("Saldo no puede ser negativo. Valor: " + currentBalance);
         }
         this.currentBalance = currentBalance;
+    }
+
+    public void debit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Monto debe ser mayor a 0");
+        }
+        BigDecimal newBalance = this.currentBalance.subtract(amount);
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientFundsException(
+                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s", 
+                    this.currentBalance, amount)
+            );
+        }
+        this.currentBalance = newBalance;
+    }
+
+    public void credit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Monto debe ser mayor a 0");
+        }
+        if (this.currentBalance == null) {
+            this.currentBalance = BigDecimal.ZERO;
+        }
+        this.currentBalance = this.currentBalance.add(amount);
     }
 }

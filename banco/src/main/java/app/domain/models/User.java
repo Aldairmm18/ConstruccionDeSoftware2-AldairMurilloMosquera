@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Getter
 @Setter
@@ -14,14 +16,28 @@ public class User extends Person {
 
     private LocalDate birthDate;
     private String username;
-    private String password;
+    
+    @JsonIgnore
+    private String passwordHash;
+    
     private SystemRole systemRole;
     private UserStatus userStatus;
 
-    public void setPassword(String password) {
-        if (password == null || (!password.startsWith("$2a$") && !password.startsWith("$2b$") && !password.startsWith("$2y$"))) {
-            throw new IllegalArgumentException("Password must be encrypted (BCrypt required)");
+    public void setPassword(String newPassword) {
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new IllegalArgumentException("Contraseña debe tener al menos 8 caracteres");
         }
-        this.password = password;
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+        this.passwordHash = encoder.encode(newPassword);
+    }
+
+    public boolean verifyPassword(String enteredPassword) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        return encoder.matches(enteredPassword, this.passwordHash);
+    }
+
+    @JsonIgnore
+    public String getPasswordHash() {
+        return passwordHash;
     }
 }

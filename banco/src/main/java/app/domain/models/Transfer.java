@@ -4,12 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Transfer {
 
@@ -22,4 +20,16 @@ public class Transfer {
   private LocalDateTime approvalDate;
   private Long creatorUserId;
   private Long approverUserId;
+  private LocalDateTime expirationDate;
+
+  public Transfer() {
+      this.creationDate = LocalDateTime.now();
+      this.expirationDate = this.creationDate.plusMinutes(60);
+      this.transferStatus = TransferStatus.PENDING;
+  }
+
+  public boolean isExpired() {
+      if (this.expirationDate == null) return false;
+      return LocalDateTime.now().isAfter(this.expirationDate);
+  }
 }
