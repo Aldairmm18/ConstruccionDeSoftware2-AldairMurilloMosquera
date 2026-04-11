@@ -2,13 +2,8 @@ package app.domain.services;
 
 import app.domain.Exceptions.BusinessException;
 import app.domain.Exceptions.LoanRejectedException;
-import app.domain.models.Loan;
-import app.domain.models.LoanStatus;
-import app.domain.models.OperationsLog;
-import app.domain.models.BankAccount;
-import app.domain.ports.LoanPort;
-import app.domain.ports.BankAccountPort;
-import app.domain.ports.OperationsLogPort;
+import app.domain.models.*;
+import app.domain.ports.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +23,7 @@ public class LoanService {
     private final BankAccountPort bankAccountPort;
     private final OperationsLogPort operationsLogPort;
     private final TransactionService transactionService;
+    private final UserPort userPort;
     
     @Transactional
     public Loan requestLoan(Loan loan) {
@@ -56,7 +52,7 @@ public class LoanService {
         
         loan.setLoanStatus(LoanStatus.UNDER_REVIEW);
         Loan saved = loanPort.save(loan);
-        recordLog("PRESTAMO_SOLICITADO", saved, null);
+        recordLog("PRESTAMO_SOLICITADO", disbursementAccount, saved, null);
         
         return saved;
     }
@@ -72,7 +68,9 @@ public class LoanService {
         
         loan.setLoanStatus(LoanStatus.APPROVED);
         Loan saved = loanPort.save(loan);
-        recordLog("PRESTAMO_APROBADO", saved, String.valueOf(userId));
+        
+        User user = userPort.findById(userId);
+        recordLog("PRESTAMO_APROBADO", loan.getDisbursementTargetAccount(), saved, user);
         
         return saved;
     }
@@ -95,7 +93,7 @@ public class LoanService {
         loan.setDisbursementDate(LocalDate.now());
         
         Loan updated = loanPort.save(loan);
-        recordLog("PRESTAMO_DESEMBOLSADO", updated, null);
+        recordLog("PRESTAMO_DESEMBOLSADO", loan.getDisbursementTargetAccount(), updated, null);
         
         return updated;
     }
@@ -112,18 +110,22 @@ public class LoanService {
         return loanPort.findById(id);
     }
     
-    private void recordLog(String operation, Loan l, String userId) {
+    // CORRECCIÓN 2: OperationsLog con referencias a entidades de dominio
+    private void recordLog(String operation, BankAccount account, Loan l, User user) {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationDateTime(LocalDateTime.now());
         log.setOperationType(operation);
+        
+        // Referencias reales
+        log.setAffectedProduct(account);
+        log.setUser(user);
         
         Map<String, Object> details = new HashMap<>();
         details.put("loanId", l.getId());
         if (l.getClient() != null) details.put("clientId", l.getClient().getId());
         details.put("amount", l.getRequestedAmount());
         details.put("status", l.getLoanStatus().toString());
-        if (userId != null) details.put("userId", userId);
         log.setDetailData(details);
         
         operationsLogPort.save(log);

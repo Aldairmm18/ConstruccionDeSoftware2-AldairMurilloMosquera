@@ -19,30 +19,23 @@ public class TransferService {
     private final TransferPort transferPort;
     private final BankAccountPort bankAccountPort;
     private final OperationsLogPort operationsLogPort;
+    private final TransferDomainService transferDomainService;
+    private final UserPort userPort;
     
     @Transactional
     public Transfer createTransfer(Transfer transfer) {
         validateAmount(transfer.getAmount());
         
-        if (transfer.getSourceAccount().getAccountNumber()
-                .equals(transfer.getTargetAccount().getAccountNumber())) {
-            throw new IllegalArgumentException("Las cuentas de origen y destino deben ser diferentes");
-        }
-        
         BankAccount source = bankAccountPort.findByAccountNumberForUpdate(transfer.getSourceAccount().getAccountNumber());
         if (source == null) throw new BusinessException("Cuenta de origen no encontrada");
-        
-        if (source.getCurrentBalance().compareTo(transfer.getAmount()) < 0) {
-            throw new InsufficientFundsException(
-                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s",
-                    source.getCurrentBalance(), transfer.getAmount()));
-        }
+        transfer.setSourceAccount(source);
         
         BankAccount target = bankAccountPort.findByAccountNumber(transfer.getTargetAccount().getAccountNumber());
         if (target == null) throw new BusinessException("Cuenta de destino no encontrada");
-        
-        transfer.setTransferStatus(TransferStatus.PENDING);
-        transfer.setCreationDate(LocalDateTime.now());
+        transfer.setTargetAccount(target);
+
+        // CORRECCIÓN 1: Uso del servicio de dominio para validaciones y alto monto
+        transferDomainService.validateTransferCreation(transfer);
         
         Transfer saved = transferPort.save(transfer);
         recordLog("TRANSFERENCIA_CREADA", saved, null);
@@ -55,14 +48,11 @@ public class TransferService {
         Transfer t = transferPort.findById(transferId);
         if (t == null) throw new BusinessException("Transferencia no encontrada");
         
-        if (t.isExpired()) {
-            t.setTransferStatus(TransferStatus.EXPIRED);
-            transferPort.save(t);
-            throw new TransferExpiredException("La transferencia ha expirado (límite de 60 minutos)");
-        }
+        // CORRECCIÓN 1: Validación de vencimiento
+        transferDomainService.validateExpiry(t);
         
-        if (t.getTransferStatus() != TransferStatus.PENDING) {
-            throw new IllegalStateException("Solo se pueden aprobar transferencias PENDIENTES");
+        if (t.getTransferStatus() != TransferStatus.PENDING && t.getTransferStatus() != TransferStatus.PENDING_APPROVAL) {
+            throw new IllegalStateException("Solo se pueden aprobar transferencias PENDIENTES o PENDIENTES DE APROBACIÓN");
         }
         
         BankAccount source = bankAccountPort.findByAccountNumberForUpdate(t.getSourceAccount().getAccountNumber());
@@ -79,7 +69,9 @@ public class TransferService {
         t.setApproverUserId(userId);
         
         Transfer updated = transferPort.save(t);
-        recordLog("TRANSFERENCIA_APROBADA", updated, String.valueOf(userId));
+        
+        User user = userPort.findById(userId);
+        recordLog("TRANSFERENCIA_APROBADA", updated, user);
         
         return updated;
     }
@@ -96,11 +88,15 @@ public class TransferService {
     @Transactional
     public void expirePendingTransfers() {
         List<Transfer> pending = transferPort.findByTransferStatus(TransferStatus.PENDING);
+        pending.addAll(transferPort.findByTransferStatus(TransferStatus.PENDING_APPROVAL));
+        
         for (Transfer t : pending) {
-            if (t.isExpired()) {
+            try {
+                transferDomainService.validateExpiry(t);
+            } catch (BusinessException e) {
                 t.setTransferStatus(TransferStatus.EXPIRED);
                 transferPort.save(t);
-                recordLog("TRANSFERENCIA_EXPIRADA_AUTOMATICAMENTE", t, "SYSTEM");
+                recordLog("TRANSFERENCIA_EXPIRADA_AUTOMATICAMENTE", t, null);
             }
         }
     }
@@ -114,11 +110,16 @@ public class TransferService {
         }
     }
     
-    private void recordLog(String operation, Transfer t, String userId) {
+    // CORRECCIÓN 2: OperationsLog con referencias a entidades de dominio
+    private void recordLog(String operation, Transfer t, User user) {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationDateTime(LocalDateTime.now());
         log.setOperationType(operation);
+        
+        // Referencias a objetos de dominio
+        log.setAffectedProduct(t.getSourceAccount());
+        log.setUser(user);
         
         Map<String, Object> details = new HashMap<>();
         details.put("transferId", t.getId());
@@ -126,7 +127,6 @@ public class TransferService {
         details.put("targetAccount", t.getTargetAccount().getAccountNumber());
         details.put("amount", t.getAmount());
         details.put("status", t.getTransferStatus().toString());
-        if (userId != null) details.put("userId", userId);
         log.setDetailData(details);
         
         operationsLogPort.save(log);

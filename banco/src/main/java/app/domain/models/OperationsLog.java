@@ -18,8 +18,11 @@ public class OperationsLog {
   private String logId;
   private String operationType;
   private LocalDateTime operationDateTime;
-  private Long affectedProductId;
-  private Long userId;
+  
+  // CORRECCIÓN 2: Referencias a entidades de dominio en lugar de IDs primitivos
+  private BankAccount affectedProduct;
+  private User user;
+  
   private SystemRole userRole;
   private Map<String, Object> detailData = new HashMap<>();
 }

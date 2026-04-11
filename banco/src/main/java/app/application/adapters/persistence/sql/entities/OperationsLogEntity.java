@@ -8,6 +8,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
@@ -33,8 +35,15 @@ public class OperationsLogEntity {
   private String logId;
   private String operationType;
   private LocalDateTime operationDateTime;
-  private Long affectedProductId;
-  private Long userId;
+
+  // CORRECCIÓN 2: Referencias reales a entidades JPA
+  @ManyToOne
+  @JoinColumn(name = "affected_product_id")
+  private BankAccountEntity affectedProduct;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private UserEntity user;
 
   @Enumerated(EnumType.STRING)
   private SystemRole userRole;
@@ -51,8 +60,11 @@ public class OperationsLogEntity {
     entity.setLogId(log.getLogId());
     entity.setOperationType(log.getOperationType());
     entity.setOperationDateTime(log.getOperationDateTime());
-    entity.setAffectedProductId(log.getAffectedProductId());
-    entity.setUserId(log.getUserId());
+    
+    // Mapeo de objetos de dominio a entidades
+    entity.setAffectedProduct(BankAccountEntity.fromDomain(log.getAffectedProduct()));
+    entity.setUser(UserEntity.fromDomain(log.getUser()));
+    
     entity.setUserRole(log.getUserRole());
     entity.setDetailData(log.getDetailData());
     return entity;
@@ -64,8 +76,11 @@ public class OperationsLogEntity {
     log.setLogId(getLogId());
     log.setOperationType(getOperationType());
     log.setOperationDateTime(getOperationDateTime());
-    log.setAffectedProductId(getAffectedProductId());
-    log.setUserId(getUserId());
+    
+    // Mapeo de entidades a objetos de dominio
+    log.setAffectedProduct(getAffectedProduct() != null ? getAffectedProduct().toDomain() : null);
+    log.setUser(getUser() != null ? getUser().toDomain() : null);
+    
     log.setUserRole(getUserRole());
     log.setDetailData(getDetailData());
     return log;

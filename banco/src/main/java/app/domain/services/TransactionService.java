@@ -70,11 +70,16 @@ public class TransactionService {
         }
     }
 
+    // CORRECCIÓN 2: OperationsLog con referencias a entidades de dominio
     private void recordLog(String type, BankAccount account, BigDecimal amount, BigDecimal oldBalance) {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationDateTime(LocalDateTime.now());
         log.setOperationType(type);
+        
+        // Referencia real al producto afectado
+        log.setAffectedProduct(account);
+        log.setUser(null); // No se provee usuario en estas operaciones por ahora
 
         Map<String, Object> details = new HashMap<>();
         details.put("accountNumber", account.getAccountNumber());
@@ -91,7 +96,7 @@ public class TransactionService {
         record.setSourceAccount(source);
         record.setTargetAccount(target);
         record.setAmount(amount);
-        record.setTransferStatus(TransferStatus.EXECUTED);
+        record.setTransferStatus(TransferStatus.COMPLETED); // Cambiado EXECUTED -> COMPLETED
         record.setCreationDate(LocalDateTime.now());
         record.setApprovalDate(LocalDateTime.now());
         transferPort.save(record);
