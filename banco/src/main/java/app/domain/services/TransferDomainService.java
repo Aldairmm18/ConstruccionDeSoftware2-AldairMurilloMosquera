@@ -1,5 +1,7 @@
 package app.domain.services;
 
+// Mejoras de lógica aplicadas para validación de montos y vencimientos
+
 import app.domain.models.Transfer;
 import app.domain.models.TransferStatus;
 import app.domain.Exceptions.BusinessException;
