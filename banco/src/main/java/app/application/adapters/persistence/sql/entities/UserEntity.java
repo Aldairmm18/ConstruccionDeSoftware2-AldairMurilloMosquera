@@ -50,6 +50,7 @@ public class UserEntity extends PersonEntity {
     entity.setEmail(user.getEmail());
     entity.setPhone(user.getPhone());
     entity.setAddress(user.getAddress());
+    entity.setBirthDate(user.getBirthDate());
     entity.setUsername(user.getUsername());
     entity.setPassword(user.getPassword());
     entity.setSystemRole(user.getSystemRole());
@@ -65,6 +66,7 @@ public class UserEntity extends PersonEntity {
     user.setEmail(getEmail());
     user.setPhone(getPhone());
     user.setAddress(getAddress());
+    user.setBirthDate(getBirthDate());
     user.setUsername(getUsername());
     user.setPassword(getPassword());
     user.setSystemRole(getSystemRole());
