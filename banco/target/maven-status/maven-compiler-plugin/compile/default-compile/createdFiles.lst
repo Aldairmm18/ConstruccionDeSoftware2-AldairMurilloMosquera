@@ -11,6 +11,7 @@ app\application\adapters\persistence\sql\entities\ClientEntity.class
 app\domain\ports\ClientPort.class
 app\interfaces\controllers\requests\AuthRequest$AuthRequestBuilder.class
 app\application\adapters\api\controllers\GlobalExceptionHandler$ErrorResponse.class
+app\domain\models\Client.class
 app\interfaces\controllers\BankAccountController.class
 app\domain\ports\BankAccountPort.class
 app\application\adapters\persistence\sql\BankAccountPersistenceAdapter.class

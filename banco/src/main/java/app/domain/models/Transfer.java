@@ -18,16 +18,23 @@ public class Transfer {
   private TransferStatus transferStatus;
   private LocalDateTime creationDate;
   private LocalDateTime approvalDate;
-  private Long creatorUserId;
-  private Long approverUserId;
+  
+  // CORRECCIÓN 3: Reemplazo de IDs primitivos por referencias a la entidad User
+  private User creatorUser;
+  private User approverUser;
+  
   private LocalDateTime expirationDate;
 
   public Transfer() {
       this.creationDate = LocalDateTime.now();
+      // Límite por defecto de 60 minutos
       this.expirationDate = this.creationDate.plusMinutes(60);
       this.transferStatus = TransferStatus.PENDING;
   }
 
+  /**
+   * Verifica si la transferencia ha expirado en base a la fecha actual.
+   */
   public boolean isExpired() {
       if (this.expirationDate == null) return false;
       return LocalDateTime.now().isAfter(this.expirationDate);

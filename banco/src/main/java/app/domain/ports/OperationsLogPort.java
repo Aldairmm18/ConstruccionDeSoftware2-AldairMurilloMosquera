@@ -6,6 +6,9 @@ import java.util.List;
 public interface OperationsLogPort {
     OperationsLog save(OperationsLog log);
     
-    // Nueva funcionalidad requerida
-    List<OperationsLog> findByProductId(Long productId);
+    /**
+     * CORRECCIÓN 2: Se cambia Long productId por String accountNumber 
+     * para mantener consistencia con los modelos de dominio.
+     */
+    List<OperationsLog> findByAffectedProductAccountNumber(String accountNumber);
 }

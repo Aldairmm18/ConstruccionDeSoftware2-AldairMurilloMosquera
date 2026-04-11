@@ -7,11 +7,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import app.domain.Exceptions.InvalidNationalIdException;
 
+/**
+ * CORRECCIÓN 1: PersonClient ahora hereda de Client.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PersonClient extends Person {
+public class PersonClient extends Client {
 
   private LocalDate birthDate;
 

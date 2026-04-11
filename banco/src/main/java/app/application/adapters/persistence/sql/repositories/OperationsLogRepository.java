@@ -10,7 +10,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OperationsLogRepository extends JpaRepository<OperationsLogEntity, Long> {
 
-    // CORRECCIÓN 2: Consulta por ID de producto afectado
-    @Query("SELECT o FROM OperationsLogEntity o WHERE o.affectedProduct.id = :productId")
-    List<OperationsLogEntity> findByAffectedProductId(@Param("productId") Long productId);
+    /**
+     * CORRECCIÓN 2: Consulta por número de cuenta del producto afectado.
+     * Se realiza un join implícito con BankAccountEntity.
+     */
+    @Query("SELECT o FROM OperationsLogEntity o WHERE o.affectedProduct.accountNumber = :accountNumber")
+    List<OperationsLogEntity> findByAffectedProductAccountNumber(@Param("accountNumber") String accountNumber);
 }

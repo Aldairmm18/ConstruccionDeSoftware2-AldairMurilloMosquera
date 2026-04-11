@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * Adaptador de persistencia para el log de operaciones.
- * Implementa las correcciones requeridas para referencias de dominio.
  */
 @Component
 @RequiredArgsConstructor
@@ -27,9 +26,9 @@ public class OperationsLogPersistenceAdapter implements OperationsLogPort {
     }
 
     @Override
-    public List<OperationsLog> findByProductId(Long productId) {
-        // Implementación del nuevo método usando el repositorio
-        return repository.findByAffectedProductId(productId)
+    public List<OperationsLog> findByAffectedProductAccountNumber(String accountNumber) {
+        // CORRECCIÓN 2: Implementación buscando por número de cuenta
+        return repository.findByAffectedProductAccountNumber(accountNumber)
                 .stream()
                 .map(OperationsLogEntity::toDomain)
                 .collect(Collectors.toList());

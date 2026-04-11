@@ -6,11 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import app.domain.Exceptions.InvalidNitException;
 
+/**
+ * CORRECCIÓN 1: CorporateClient ahora hereda de Client.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CorporateClient extends Person {
+public class CorporateClient extends Client {
 
     private String businessName;
     private String nit;

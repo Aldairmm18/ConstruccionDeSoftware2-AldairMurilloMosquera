@@ -66,11 +66,11 @@ public class TransferService {
         
         t.setTransferStatus(TransferStatus.APPROVED);
         t.setApprovalDate(LocalDateTime.now());
-        t.setApproverUserId(userId);
-        
-        Transfer updated = transferPort.save(t);
         
         User user = userPort.findById(userId);
+        t.setApproverUser(user);
+        
+        Transfer updated = transferPort.save(t);
         recordLog("TRANSFERENCIA_APROBADA", updated, user);
         
         return updated;

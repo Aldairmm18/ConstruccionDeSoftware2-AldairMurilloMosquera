@@ -52,11 +52,14 @@ public class TransferEntity {
   @Column(name = "approval_date")
   private LocalDateTime approvalDate;
 
-  @Column(name = "creator_user_id")
-  private Long creatorUserId;
+  // CORRECCIÓN 3: Relaciones reales con UserEntity
+  @ManyToOne
+  @JoinColumn(name = "creator_user_id")
+  private UserEntity creatorUser;
 
-  @Column(name = "approver_user_id")
-  private Long approverUserId;
+  @ManyToOne
+  @JoinColumn(name = "approver_user_id")
+  private UserEntity approverUser;
 
   @Column(name = "expiration_date")
   private LocalDateTime expirationDate;
@@ -73,8 +76,11 @@ public class TransferEntity {
     entity.setTransferStatus(transfer.getTransferStatus());
     entity.setCreationDate(transfer.getCreationDate());
     entity.setApprovalDate(transfer.getApprovalDate());
-    entity.setCreatorUserId(transfer.getCreatorUserId());
-    entity.setApproverUserId(transfer.getApproverUserId());
+    
+    // Mapeo de objetos de dominio a entidades persistentes
+    entity.setCreatorUser(UserEntity.fromDomain(transfer.getCreatorUser()));
+    entity.setApproverUser(UserEntity.fromDomain(transfer.getApproverUser()));
+    
     entity.setExpirationDate(transfer.getExpirationDate());
     return entity;
   }
@@ -88,8 +94,11 @@ public class TransferEntity {
     transfer.setTransferStatus(getTransferStatus());
     transfer.setCreationDate(getCreationDate());
     transfer.setApprovalDate(getApprovalDate());
-    transfer.setCreatorUserId(getCreatorUserId());
-    transfer.setApproverUserId(getApproverUserId());
+    
+    // Mapeo de entidades persistentes a objetos de dominio
+    transfer.setCreatorUser(getCreatorUser() != null ? getCreatorUser().toDomain() : null);
+    transfer.setApproverUser(getApproverUser() != null ? getApproverUser().toDomain() : null);
+    
     transfer.setExpirationDate(getExpirationDate());
     return transfer;
   }
