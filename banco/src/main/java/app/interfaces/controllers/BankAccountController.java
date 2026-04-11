@@ -10,26 +10,26 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cuentas")
+@RequestMapping("/api/accounts")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class CuentaController {
+public class BankAccountController {
     
     private final AccountManagementUseCase accountManagementUseCase;
     private final BankAccountPort bankAccountPort;
     
     @PostMapping
-    public ResponseEntity<BankAccount> crear(@RequestBody BankAccount account) {
+    public ResponseEntity<BankAccount> create(@RequestBody BankAccount account) {
         return ResponseEntity.ok(accountManagementUseCase.createAccount(account));
     }
     
     @GetMapping
-    public ResponseEntity<List<BankAccount>> listar() {
+    public ResponseEntity<List<BankAccount>> findAll() {
         return ResponseEntity.ok(bankAccountPort.findAll());
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscar(@PathVariable Long id) {
+    public ResponseEntity<?> findById(@PathVariable Long id) {
         BankAccount account = bankAccountPort.findById(id);
         if (account == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(account);

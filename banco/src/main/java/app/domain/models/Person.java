@@ -4,9 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import app.domain.Exceptions.EmailInvalidoException;
-import app.domain.Exceptions.TelefonoInvalidoException;
-import java.util.regex.Pattern;
+import app.domain.Exceptions.InvalidEmailException;
+import app.domain.Exceptions.InvalidPhoneException;
 
 @Getter
 @Setter
@@ -23,21 +22,21 @@ public class Person {
 
     public void setEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new EmailInvalidoException("Email es obligatorio");
+            throw new InvalidEmailException("Email is required");
         }
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         if (!email.matches(emailRegex)) {
-            throw new EmailInvalidoException("Formato de email inválido: " + email);
+            throw new InvalidEmailException("Invalid email format: " + email);
         }
         this.email = email.toLowerCase().trim();
     }
 
     public void setPhone(String phone) {
         if (phone == null || phone.isBlank()) {
-            throw new TelefonoInvalidoException("Teléfono es obligatorio");
+            throw new InvalidPhoneException("Phone is required");
         }
         if (!phone.matches("3\\d{9}")) {
-            throw new TelefonoInvalidoException("Teléfono debe ser formato colombiano: 3XXXXXXXXX");
+            throw new InvalidPhoneException("Phone must be in Colombian format: 3XXXXXXXXX");
         }
         this.phone = phone;
     }

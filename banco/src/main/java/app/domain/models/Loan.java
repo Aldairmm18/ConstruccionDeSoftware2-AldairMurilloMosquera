@@ -13,8 +13,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Loan {
 
-  private Long loanId;
-  private Long requestingClientId;
+  private Long id;
+  private PersonClient client;
   private LoanType loanType;
   private LoanStatus loanStatus;
   private BigDecimal requestedAmount;

@@ -1,6 +1,6 @@
 package app.interfaces.controllers;
 
-import app.domain.services.TransaccionService;
+import app.domain.services.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,27 +9,27 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/transacciones")
+@RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class TransaccionController {
+public class TransactionController {
     
-    private final TransaccionService transaccionService;
+    private final TransactionService transactionService;
     
-    @PostMapping("/deposito")
-    public ResponseEntity<?> depositar(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
+    @PostMapping("/deposit")
+    public ResponseEntity<?> deposit(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
         try {
-            transaccionService.depositar(accountNumber, amount);
+            transactionService.deposit(accountNumber, amount);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     
-    @PostMapping("/retiro")
-    public ResponseEntity<?> retirar(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdraw(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
         try {
-            transaccionService.retirar(accountNumber, amount);
+            transactionService.withdraw(accountNumber, amount);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

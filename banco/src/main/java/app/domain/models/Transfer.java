@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Transfer {
 
-  private Long transferId;
+  private Long id;
   private BankAccount sourceAccount;
   private BankAccount targetAccount;
   private BigDecimal amount;

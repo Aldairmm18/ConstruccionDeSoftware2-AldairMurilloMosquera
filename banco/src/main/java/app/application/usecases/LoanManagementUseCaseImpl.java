@@ -26,7 +26,8 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
     @Override
     @Transactional
     public Loan requestLoan(Loan loan) {
-        long activeAccounts = bankAccountPort.countByClientId(loan.getRequestingClientId());
+        if (loan.getClient() == null) throw new BusinessException("Client required");
+        long activeAccounts = bankAccountPort.countByClientId(loan.getClient().getId());
         
         if (activeAccounts < 2) {
             throw new BusinessException("Customer must have at least 2 active accounts to apply for a loan");

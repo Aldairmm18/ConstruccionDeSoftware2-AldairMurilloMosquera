@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import app.domain.Exceptions.CedulaInvalidaException;
+import app.domain.Exceptions.InvalidNationalIdException;
 
 @Getter
 @Setter
@@ -18,10 +18,10 @@ public class PersonClient extends Person {
   @Override
   public void setDocument(String document) {
       if (document == null || document.isBlank()) {
-          throw new CedulaInvalidaException("Cédula es obligatoria");
+          throw new InvalidNationalIdException("ID (Cédula) is required");
       }
       if (!document.matches("\\d{7,10}")) {
-          throw new CedulaInvalidaException("Cédula debe tener entre 7 y 10 dígitos");
+          throw new InvalidNationalIdException("ID (Cédula) must have between 7 and 10 digits");
       }
       super.setDocument(document);
   }

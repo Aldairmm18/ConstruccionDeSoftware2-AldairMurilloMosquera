@@ -1,15 +1,15 @@
 {
   "info": {
-    "name": "Sistema Bancario Blindado",
+    "name": "Hardened Banking System",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1. Crear Cuenta",
+      "name": "1. Create Account",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
-        "url": "http://localhost:8080/api/cuentas",
+        "url": "http://localhost:8080/api/accounts",
         "body": {
           "mode": "raw",
           "raw": "{\n  \"accountNumber\": \"1234567890\",\n  \"accountType\": \"SAVINGS\",\n  \"currentBalance\": 1000000,\n  \"clientId\": 1\n}"
@@ -17,44 +17,44 @@
       }
     },
     {
-      "name": "2. Crear Transferencia",
+      "name": "2. Create Transfer",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
-        "url": "http://localhost:8080/api/transferencias",
+        "url": "http://localhost:8080/api/transfers",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"numeroCuentaOrigen\": \"1234567890\",\n  \"numeroCuentaDestino\": \"0987654321\",\n  \"monto\": 150000.50\n}"
+          "raw": "{\n  \"sourceAccountNumber\": \"1234567890\",\n  \"targetAccountNumber\": \"0987654321\",\n  \"amount\": 150000.50\n}"
         }
       }
     },
     {
-      "name": "3. Aprobar Transferencia",
+      "name": "3. Approve Transfer",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8080/api/transferencias/1/aprobar?usuarioId=99"
+        "url": "http://localhost:8080/api/transfers/1/approve?userId=99"
       }
     },
     {
-      "name": "4. Listar Transferencias",
+      "name": "4. List Transfers",
       "request": {
         "method": "GET",
-        "url": "http://localhost:8080/api/transferencias"
+        "url": "http://localhost:8080/api/transfers"
       }
     },
     {
-      "name": "5. Crear Depósito",
+      "name": "5. Deposit",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8080/api/transacciones/deposito?accountNumber=1234567890&amount=500000"
+        "url": "http://localhost:8080/api/transactions/deposit?accountNumber=1234567890&amount=500000"
       }
     },
     {
-      "name": "6. Solicitar Préstamo",
+      "name": "6. Request Loan",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
-        "url": "http://localhost:8080/api/prestamos",
+        "url": "http://localhost:8080/api/loans",
         "body": {
           "mode": "raw",
           "raw": "{\n  \"client\": {\"id\": 1},\n  \"requestedAmount\": 10000000,\n  \"interestRate\": 12.5,\n  \"termMonths\": 36,\n  \"disbursementTargetAccount\": {\"accountNumber\": \"1234567890\"}\n}"
@@ -62,40 +62,40 @@
       }
     },
     {
-      "name": "7. Aprobar Préstamo",
+      "name": "7. Approve Loan",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8080/api/prestamos/1/aprobar?usuarioId=99"
+        "url": "http://localhost:8080/api/loans/1/approve?userId=99"
       }
     },
     {
-      "name": "8. Desembolsar Préstamo",
+      "name": "8. Disburse Loan",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8080/api/prestamos/1/desembolsar"
+        "url": "http://localhost:8080/api/loans/1/disburse"
       }
     },
     {
-      "name": "TEST: Monto Negativo (debe fallar)",
+      "name": "TEST: Negative Amount (should fail)",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
-        "url": "http://localhost:8080/api/transferencias",
+        "url": "http://localhost:8080/api/transfers",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"numeroCuentaOrigen\": \"1234567890\",\n  \"numeroCuentaDestino\": \"0987654321\",\n  \"monto\": -1000\n}"
+          "raw": "{\n  \"sourceAccountNumber\": \"1234567890\",\n  \"targetAccountNumber\": \"0987654321\",\n  \"amount\": -1000\n}"
         }
       }
     },
     {
-      "name": "TEST: Saldo Insuficiente (debe fallar)",
+      "name": "TEST: Insufficient Balance (should fail)",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
-        "url": "http://localhost:8080/api/transferencias",
+        "url": "http://localhost:8080/api/transfers",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"numeroCuentaOrigen\": \"1234567890\",\n  \"numeroCuentaDestino\": \"0987654321\",\n  \"monto\": 99999999\n}"
+          "raw": "{\n  \"sourceAccountNumber\": \"1234567890\",\n  \"targetAccountNumber\": \"0987654321\",\n  \"amount\": 99999999\n}"
         }
       }
     }

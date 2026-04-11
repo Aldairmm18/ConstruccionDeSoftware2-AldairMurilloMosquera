@@ -24,39 +24,41 @@ public class BankAccount {
     private LocalDate openingDate;
     private PersonClient client;
 
-    public void setCurrentBalance(BigDecimal currentBalance) {
-        if (currentBalance == null) {
-            throw new IllegalArgumentException("Saldo no puede ser nulo");
+    public void setCurrentBalance(BigDecimal balance) {
+        if (balance == null) {
+            throw new IllegalArgumentException("Balance cannot be null");
         }
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new app.domain.Exceptions.InsufficientFundsException("Saldo no puede ser negativo. Valor: " + balance);
+            throw new app.domain.Exceptions.InsufficientFundsException("Balance cannot be negative. Value: " + balance);
         }
         this.currentBalance = balance;
     }
 
-    // MÉTODO BLINDADO: Debitar con validaciones
-    public void debitar(BigDecimal monto) {
-        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new app.domain.Exceptions.InvalidAmountException("Monto debe ser mayor a 0");
+    // HARDENED METHOD: Debit with validations
+    public void debit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new app.domain.Exceptions.InvalidAmountException("Amount must be greater than 0");
         }
-        BigDecimal nuevoSaldo = this.currentBalance.subtract(monto);
-        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+        if (this.currentBalance == null) this.currentBalance = BigDecimal.ZERO;
+        
+        BigDecimal newBalance = this.currentBalance.subtract(amount);
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new app.domain.Exceptions.InsufficientFundsException(
-                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s", 
-                    this.currentBalance, monto)
+                String.format("Insufficient balance. Available: %s, Required: %s", 
+                    this.currentBalance, amount)
             );
         }
-        this.currentBalance = nuevoSaldo;
+        this.currentBalance = newBalance;
     }
 
-    // MÉTODO BLINDADO: Acreditar con validaciones
-    public void acreditar(BigDecimal monto) {
-        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new app.domain.Exceptions.InvalidAmountException("Monto debe ser mayor a 0");
+    // HARDENED METHOD: Credit with validations
+    public void credit(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new app.domain.Exceptions.InvalidAmountException("Amount must be greater than 0");
         }
         if (this.currentBalance == null) {
             this.currentBalance = BigDecimal.ZERO;
         }
-        this.currentBalance = this.currentBalance.add(monto);
+        this.currentBalance = this.currentBalance.add(amount);
     }
 }

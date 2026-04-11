@@ -3,6 +3,7 @@ package app.application.adapters.persistence.sql.entities;
 import app.domain.models.Loan;
 import app.domain.models.LoanStatus;
 import app.domain.models.LoanType;
+import app.domain.models.PersonClient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -70,8 +71,10 @@ public class LoanEntity {
       return null;
     }
     LoanEntity entity = new LoanEntity();
-    entity.setLoanId(loan.getLoanId());
-    entity.setRequestingClientId(loan.getRequestingClientId());
+    entity.setLoanId(loan.getId());
+    if (loan.getClient() != null) {
+        entity.setRequestingClientId(loan.getClient().getId());
+    }
     entity.setLoanType(loan.getLoanType());
     entity.setLoanStatus(loan.getLoanStatus());
     entity.setRequestedAmount(loan.getRequestedAmount());
@@ -87,8 +90,12 @@ public class LoanEntity {
 
   public Loan toDomain() {
     Loan loan = new Loan();
-    loan.setLoanId(getLoanId());
-    loan.setRequestingClientId(getRequestingClientId());
+    loan.setId(getLoanId());
+    
+    PersonClient client = new PersonClient();
+    client.setId(getRequestingClientId());
+    loan.setClient(client);
+    
     loan.setLoanType(getLoanType());
     loan.setLoanStatus(getLoanStatus());
     loan.setRequestedAmount(getRequestedAmount());

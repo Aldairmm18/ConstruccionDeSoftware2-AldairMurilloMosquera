@@ -58,12 +58,15 @@ public class TransferEntity {
   @Column(name = "approver_user_id")
   private Long approverUserId;
 
+  @Column(name = "expiration_date")
+  private LocalDateTime expirationDate;
+
   public static TransferEntity fromDomain(Transfer transfer) {
     if (transfer == null) {
       return null;
     }
     TransferEntity entity = new TransferEntity();
-    entity.setTransferId(transfer.getTransferId());
+    entity.setTransferId(transfer.getId());
     entity.setSourceAccount(BankAccountEntity.fromDomain(transfer.getSourceAccount()));
     entity.setTargetAccount(BankAccountEntity.fromDomain(transfer.getTargetAccount()));
     entity.setAmount(transfer.getAmount());
@@ -72,12 +75,13 @@ public class TransferEntity {
     entity.setApprovalDate(transfer.getApprovalDate());
     entity.setCreatorUserId(transfer.getCreatorUserId());
     entity.setApproverUserId(transfer.getApproverUserId());
+    entity.setExpirationDate(transfer.getExpirationDate());
     return entity;
   }
 
   public Transfer toDomain() {
     Transfer transfer = new Transfer();
-    transfer.setTransferId(getTransferId());
+    transfer.setId(getTransferId());
     transfer.setSourceAccount(getSourceAccount() != null ? getSourceAccount().toDomain() : null);
     transfer.setTargetAccount(getTargetAccount() != null ? getTargetAccount().toDomain() : null);
     transfer.setAmount(getAmount());
@@ -86,6 +90,7 @@ public class TransferEntity {
     transfer.setApprovalDate(getApprovalDate());
     transfer.setCreatorUserId(getCreatorUserId());
     transfer.setApproverUserId(getApproverUserId());
+    transfer.setExpirationDate(getExpirationDate());
     return transfer;
   }
 }

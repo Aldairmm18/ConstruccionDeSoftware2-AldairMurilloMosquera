@@ -25,7 +25,7 @@ public class User extends Person {
 
     public void setPassword(String newPassword) {
         if (newPassword == null || newPassword.length() < 8) {
-            throw new IllegalArgumentException("Contraseña debe tener al menos 8 caracteres");
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
         }
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
         this.passwordHash = encoder.encode(newPassword);
@@ -34,6 +34,10 @@ public class User extends Person {
     public boolean verifyPassword(String enteredPassword) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         return encoder.matches(enteredPassword, this.passwordHash);
+    }
+
+    public String getPassword() {
+        return passwordHash;
     }
 
     @JsonIgnore

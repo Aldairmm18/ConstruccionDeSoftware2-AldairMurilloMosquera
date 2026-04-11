@@ -3,31 +3,30 @@ package app.interfaces.controllers;
 import app.application.usecases.ClientManagementUseCase;
 import app.domain.models.PersonClient;
 import app.domain.ports.ClientPort;
-import app.interfaces.controllers.requests.ClientRequest;
-import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/clientes")
+@RequestMapping("/api/clients")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class ClienteController {
+public class ClientController {
 
   private final ClientManagementUseCase clientManagementUseCase;
   private final ClientPort clientPort;
 
   @PostMapping
-  public ResponseEntity<PersonClient> crear(@Valid @RequestBody PersonClient client) {
+  public ResponseEntity<PersonClient> create(@RequestBody PersonClient client) {
     PersonClient createdClient = clientManagementUseCase.createNaturalClient(client);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdClient);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<PersonClient> buscarPorId(@PathVariable Long id) {
+  public ResponseEntity<PersonClient> findById(@PathVariable Long id) {
     PersonClient client = clientPort.findById(id);
     if (client == null) {
       return ResponseEntity.notFound().build();
@@ -36,7 +35,7 @@ public class ClienteController {
   }
 
   @GetMapping
-  public ResponseEntity<List<PersonClient>> listar() {
+  public ResponseEntity<List<PersonClient>> findAll() {
     return ResponseEntity.ok(clientPort.findAll());
   }
 }
