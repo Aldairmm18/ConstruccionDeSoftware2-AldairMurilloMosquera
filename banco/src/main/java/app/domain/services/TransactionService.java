@@ -157,7 +157,6 @@ public class TransactionService {
             throw new InsufficientFundsException("Insufficient balance for operation");
         }
     }
-    }
 
     @Transactional
     public Transfer approve(Long transferId, Long userId) {
