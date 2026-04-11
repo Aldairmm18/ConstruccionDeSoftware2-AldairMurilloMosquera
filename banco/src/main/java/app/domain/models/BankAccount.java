@@ -28,33 +28,35 @@ public class BankAccount {
         if (currentBalance == null) {
             throw new IllegalArgumentException("Saldo no puede ser nulo");
         }
-        if (currentBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InsufficientFundsException("Saldo no puede ser negativo. Valor: " + currentBalance);
+        if (balance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new app.domain.Exceptions.InsufficientFundsException("Saldo no puede ser negativo. Valor: " + balance);
         }
-        this.currentBalance = currentBalance;
+        this.currentBalance = balance;
     }
 
-    public void debit(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Monto debe ser mayor a 0");
+    // MÉTODO BLINDADO: Debitar con validaciones
+    public void debitar(BigDecimal monto) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new app.domain.Exceptions.InvalidAmountException("Monto debe ser mayor a 0");
         }
-        BigDecimal newBalance = this.currentBalance.subtract(amount);
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InsufficientFundsException(
+        BigDecimal nuevoSaldo = this.currentBalance.subtract(monto);
+        if (nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
+            throw new app.domain.Exceptions.InsufficientFundsException(
                 String.format("Saldo insuficiente. Disponible: %s, Requerido: %s", 
-                    this.currentBalance, amount)
+                    this.currentBalance, monto)
             );
         }
-        this.currentBalance = newBalance;
+        this.currentBalance = nuevoSaldo;
     }
 
-    public void credit(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Monto debe ser mayor a 0");
+    // MÉTODO BLINDADO: Acreditar con validaciones
+    public void acreditar(BigDecimal monto) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new app.domain.Exceptions.InvalidAmountException("Monto debe ser mayor a 0");
         }
         if (this.currentBalance == null) {
             this.currentBalance = BigDecimal.ZERO;
         }
-        this.currentBalance = this.currentBalance.add(amount);
+        this.currentBalance = this.currentBalance.add(monto);
     }
 }
