@@ -18,4 +18,5 @@ public interface TransferRepository extends JpaRepository<TransferEntity, Long> 
   List<TransferEntity> findByTargetAccount(@Param("targetAccount") String targetAccount);
 
   List<TransferEntity> findByTransferStatus(TransferStatus transferStatus);
+  List<TransferEntity> findByTransferStatusAndCreationDateBefore(TransferStatus status, java.time.LocalDateTime dateTime);
 }

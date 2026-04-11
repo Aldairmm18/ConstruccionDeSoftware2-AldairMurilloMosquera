@@ -14,4 +14,5 @@ public interface TransferPort {
   List<Transfer> findBySourceAccount(String sourceAccount);
   List<Transfer> findByTargetAccount(String targetAccount);
   List<Transfer> findByTransferStatus(app.domain.models.TransferStatus transferStatus);
+  List<Transfer> findByTransferStatusAndCreationDateBefore(app.domain.models.TransferStatus status, java.time.LocalDateTime dateTime);
 }

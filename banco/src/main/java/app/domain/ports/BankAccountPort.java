@@ -12,6 +12,8 @@ public interface BankAccountPort {
   List<BankAccount> findAll();
 
   BankAccount findByAccountNumber(String accountNumber);
+  BankAccount findByAccountNumberForUpdate(String accountNumber);
   boolean existsByAccountNumber(String accountNumber);
   List<BankAccount> findByClientId(Long clientId);
+  long countByClientId(Long clientId);
 }

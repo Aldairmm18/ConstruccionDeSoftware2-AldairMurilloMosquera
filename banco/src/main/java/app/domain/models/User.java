@@ -11,7 +11,20 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User extends Person {
 
-  private String username;
-  private SystemRole systemRole;
-  private UserStatus userStatus;
+    private String username;
+    
+    private String password;
+    
+    private SystemRole systemRole;
+    
+    private UserStatus userStatus;
+
+
+    public void setPassword(String password) {
+        if (password == null || (!password.startsWith("$2a$") && !password.startsWith("$2b$") && !password.startsWith("$2y$"))) {
+            throw new IllegalArgumentException("Password must be encrypted (BCrypt required)");
+        }
+        this.password = password;
+    }
+
 }

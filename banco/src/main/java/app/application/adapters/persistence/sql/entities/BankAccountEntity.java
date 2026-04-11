@@ -33,7 +33,7 @@ public class BankAccountEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "account_number", unique = true, nullable = false)
+  @Column(name = "account_number", unique = true, nullable = false, updatable = false)
   private String accountNumber;
 
   @Column(name = "account_type", nullable = false)

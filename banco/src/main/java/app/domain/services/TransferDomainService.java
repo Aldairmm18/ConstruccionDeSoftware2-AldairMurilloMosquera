@@ -17,7 +17,10 @@ public class TransferDomainService {
             throw new BusinessException("La cuenta origen y destino no pueden ser iguales.");
         }
         if (transfer.getAmount() == null || transfer.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("El monto a transferir debe ser mayor a 0.");
+            throw new IllegalArgumentException("El monto a transferir debe ser mayor a 0.");
+        }
+        if (transfer.getSourceAccount().getCurrentBalance().compareTo(transfer.getAmount()) < 0) {
+            throw new app.domain.Exceptions.FondosInsuficientesException("Fondos insuficientes para realizar la transferencia.");
         }
     }
 }

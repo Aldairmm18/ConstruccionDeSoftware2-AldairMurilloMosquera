@@ -53,6 +53,11 @@ public class TransferPersistenceAdapter implements TransferPort {
     return transferRepository.findByTransferStatus(transferStatus).stream().map(this::toModel).toList();
   }
 
+  @Override
+  public List<Transfer> findByTransferStatusAndCreationDateBefore(app.domain.models.TransferStatus status, java.time.LocalDateTime dateTime) {
+    return transferRepository.findByTransferStatusAndCreationDateBefore(status, dateTime).stream().map(this::toModel).toList();
+  }
+
   private TransferEntity toEntity(Transfer model) {
     if (model == null) return null;
     TransferEntity entity = new TransferEntity();

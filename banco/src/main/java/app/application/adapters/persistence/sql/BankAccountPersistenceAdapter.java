@@ -42,6 +42,11 @@ public class BankAccountPersistenceAdapter implements BankAccountPort {
   }
 
   @Override
+  public BankAccount findByAccountNumberForUpdate(String accountNumber) {
+    return bankAccountRepository.findByAccountNumberForUpdate(accountNumber).map(this::toModel).orElse(null);
+  }
+
+  @Override
   public boolean existsByAccountNumber(String accountNumber) {
     return bankAccountRepository.existsByAccountNumber(accountNumber);
   }
@@ -49,6 +54,11 @@ public class BankAccountPersistenceAdapter implements BankAccountPort {
   @Override
   public List<BankAccount> findByClientId(Long clientId) {
     return bankAccountRepository.findByClient_Id(clientId).stream().map(this::toModel).toList();
+  }
+
+  @Override
+  public long countByClientId(Long clientId) {
+    return bankAccountRepository.countByClient_Id(clientId);
   }
 
   private BankAccountEntity toEntity(BankAccount model) {
