@@ -26,26 +26,26 @@ public class TransferService {
         
         if (transfer.getSourceAccount().getAccountNumber()
                 .equals(transfer.getTargetAccount().getAccountNumber())) {
-            throw new IllegalArgumentException("Source and target accounts must be different");
+            throw new IllegalArgumentException("Las cuentas de origen y destino deben ser diferentes");
         }
         
         BankAccount source = bankAccountPort.findByAccountNumberForUpdate(transfer.getSourceAccount().getAccountNumber());
-        if (source == null) throw new BusinessException("Source account not found");
+        if (source == null) throw new BusinessException("Cuenta de origen no encontrada");
         
         if (source.getCurrentBalance().compareTo(transfer.getAmount()) < 0) {
             throw new InsufficientFundsException(
-                String.format("Insufficient balance. Available: %s, Required: %s",
+                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s",
                     source.getCurrentBalance(), transfer.getAmount()));
         }
         
         BankAccount target = bankAccountPort.findByAccountNumber(transfer.getTargetAccount().getAccountNumber());
-        if (target == null) throw new BusinessException("Target account not found");
+        if (target == null) throw new BusinessException("Cuenta de destino no encontrada");
         
         transfer.setTransferStatus(TransferStatus.PENDING);
         transfer.setCreationDate(LocalDateTime.now());
         
         Transfer saved = transferPort.save(transfer);
-        recordLog("TRANSFER_CREATED", saved, null);
+        recordLog("TRANSFERENCIA_CREADA", saved, null);
         
         return saved;
     }
@@ -53,16 +53,16 @@ public class TransferService {
     @Transactional
     public Transfer approveTransfer(Long transferId, Long userId) {
         Transfer t = transferPort.findById(transferId);
-        if (t == null) throw new BusinessException("Transfer not found");
+        if (t == null) throw new BusinessException("Transferencia no encontrada");
         
         if (t.isExpired()) {
             t.setTransferStatus(TransferStatus.EXPIRED);
             transferPort.save(t);
-            throw new TransferExpiredException("Transfer expired (60 minute limit)");
+            throw new TransferExpiredException("La transferencia ha expirado (límite de 60 minutos)");
         }
         
         if (t.getTransferStatus() != TransferStatus.PENDING) {
-            throw new IllegalStateException("Only PENDING transfers can be approved");
+            throw new IllegalStateException("Solo se pueden aprobar transferencias PENDIENTES");
         }
         
         BankAccount source = bankAccountPort.findByAccountNumberForUpdate(t.getSourceAccount().getAccountNumber());
@@ -79,7 +79,7 @@ public class TransferService {
         t.setApproverUserId(userId);
         
         Transfer updated = transferPort.save(t);
-        recordLog("TRANSFER_APPROVED", updated, String.valueOf(userId));
+        recordLog("TRANSFERENCIA_APROBADA", updated, String.valueOf(userId));
         
         return updated;
     }
@@ -100,17 +100,17 @@ public class TransferService {
             if (t.isExpired()) {
                 t.setTransferStatus(TransferStatus.EXPIRED);
                 transferPort.save(t);
-                recordLog("TRANSFER_EXPIRED_AUTOMATICALLY", t, "SYSTEM");
+                recordLog("TRANSFERENCIA_EXPIRADA_AUTOMATICAMENTE", t, "SYSTEM");
             }
         }
     }
     
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Amount must be greater than 0");
+            throw new InvalidAmountException("El monto debe ser mayor a 0");
         }
         if (amount.scale() > 2) {
-            throw new InvalidAmountException("Amount cannot have more than 2 decimal places");
+            throw new InvalidAmountException("El monto no puede tener más de 2 decimales");
         }
     }
     

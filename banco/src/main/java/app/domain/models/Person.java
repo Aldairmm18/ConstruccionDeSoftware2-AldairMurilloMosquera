@@ -22,21 +22,21 @@ public class Person {
 
     public void setEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new InvalidEmailException("Email is required");
+            throw new InvalidEmailException("El email es obligatorio");
         }
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         if (!email.matches(emailRegex)) {
-            throw new InvalidEmailException("Invalid email format: " + email);
+            throw new InvalidEmailException("Formato de email inválido: " + email);
         }
         this.email = email.toLowerCase().trim();
     }
 
     public void setPhone(String phone) {
         if (phone == null || phone.isBlank()) {
-            throw new InvalidPhoneException("Phone is required");
+            throw new InvalidPhoneException("El teléfono es obligatorio");
         }
         if (!phone.matches("3\\d{9}")) {
-            throw new InvalidPhoneException("Phone must be in Colombian format: 3XXXXXXXXX");
+            throw new InvalidPhoneException("El teléfono debe tener formato colombiano: 3XXXXXXXXX");
         }
         this.phone = phone;
     }

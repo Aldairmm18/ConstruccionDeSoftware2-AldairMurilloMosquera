@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Consolidated Client Service.
- * Manages the full lifecycle of banking clients.
+ * Servicio Consolidado de Clientes.
+ * Gestiona el ciclo de vida completo de los clientes bancarios.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,18 +23,18 @@ public class ClientService {
     public PersonClient registerClient(PersonClient client) {
         if (clientPort.existsByDocument(client.getDocument())) {
             throw new app.domain.Exceptions.DuplicateIdentificationException(
-                "A client with this identification already exists: " + client.getDocument());
+                "Ya existe un cliente con identificación: " + client.getDocument());
         }
         
         if (clientPort.existsByEmail(client.getEmail())) {
             throw new app.domain.Exceptions.InvalidEmailException(
-                "A client with this email already exists: " + client.getEmail());
+                "Ya existe un cliente con email: " + client.getEmail());
         }
 
-        // Business Rules & Validations
+        // Reglas de Negocio y Validaciones
         clientDomainService.validateClientCreation(client);
         
-        // Final Persistence
+        // Persistencia Final
         return clientPort.save(client);
     }
 

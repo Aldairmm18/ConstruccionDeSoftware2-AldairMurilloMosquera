@@ -31,13 +31,13 @@ public class TransactionService {
     public void deposit(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
         BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) throw new BusinessException("Account not found");
+        if (account == null) throw new BusinessException("Cuenta no encontrada");
 
         BigDecimal oldBalance = account.getCurrentBalance();
         account.credit(amount);
         bankAccountPort.save(account);
 
-        recordLog("DEPOSIT", account, amount, oldBalance);
+        recordLog("DEPOSITO", account, amount, oldBalance);
         recordLedger(null, account, amount);
     }
 
@@ -45,28 +45,28 @@ public class TransactionService {
     public void withdraw(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
         BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) throw new BusinessException("Account not found");
+        if (account == null) throw new BusinessException("Cuenta no encontrada");
 
         BigDecimal oldBalance = account.getCurrentBalance();
         account.debit(amount);
         bankAccountPort.save(account);
 
-        recordLog("WITHDRAW", account, amount, oldBalance);
+        recordLog("RETIRO", account, amount, oldBalance);
         recordLedger(account, null, amount);
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null) {
-            throw new InvalidAmountException("Amount cannot be null");
+            throw new InvalidAmountException("El monto no puede ser nulo");
         }
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Amount must be greater than 0");
+            throw new InvalidAmountException("El monto debe ser mayor a 0");
         }
         if (amount.compareTo(new BigDecimal("999999999.99")) > 0) {
-            throw new InvalidAmountException("Amount exceeds allowed limit");
+            throw new InvalidAmountException("El monto excede el límite permitido");
         }
         if (amount.scale() > 2) {
-            throw new InvalidAmountException("Amount cannot have more than 2 decimal places");
+            throw new InvalidAmountException("El monto no puede tener más de 2 decimales");
         }
     }
 

@@ -18,10 +18,10 @@ public class PersonClient extends Person {
   @Override
   public void setDocument(String document) {
       if (document == null || document.isBlank()) {
-          throw new InvalidNationalIdException("ID (Cédula) is required");
+          throw new InvalidNationalIdException("La cédula es obligatoria");
       }
       if (!document.matches("\\d{7,10}")) {
-          throw new InvalidNationalIdException("ID (Cédula) must have between 7 and 10 digits");
+          throw new InvalidNationalIdException("La cédula debe tener entre 7 y 10 dígitos");
       }
       super.setDocument(document);
   }

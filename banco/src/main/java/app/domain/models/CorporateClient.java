@@ -19,19 +19,19 @@ public class CorporateClient extends Person {
 
     public void setNit(String nit) {
         if (nit == null || nit.isBlank()) {
-            throw new InvalidNitException("NIT is required");
+            throw new InvalidNitException("El NIT es obligatorio");
         }
         if (!nit.matches("\\d{9}-\\d")) {
-            throw new InvalidNitException("NIT must have the format XXXXXXXXX-X");
+            throw new InvalidNitException("El NIT debe tener el formato XXXXXXXXX-X");
         }
         
-        // Validate verification digit (Colombian NIT algorithm)
+        // Validar dígito de verificación (Algoritmo NIT colombiano)
         String number = nit.substring(0, 9);
         char expectedDv = calculateNitDv(number);
         char inputDv = nit.charAt(10);
         
         if (expectedDv != inputDv) {
-            throw new InvalidNitException("Incorrect NIT verification digit");
+            throw new InvalidNitException("Dígito de verificación del NIT incorrecto");
         }
         
         this.nit = nit;

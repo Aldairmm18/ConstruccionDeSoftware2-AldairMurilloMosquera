@@ -32,31 +32,31 @@ public class LoanService {
     @Transactional
     public Loan requestLoan(Loan loan) {
         if (loan.getClient() == null || loan.getClient().getId() == null) {
-            throw new BusinessException("Client data incomplete");
+            throw new BusinessException("Datos del cliente incompletos");
         }
         
         long activeAccounts = bankAccountPort.countByClientId(loan.getClient().getId());
         if (activeAccounts < 2) {
             throw new LoanRejectedException(
-                String.format("Must have at least 2 active accounts to request a loan. Has: %d", activeAccounts));
+                String.format("Debe tener al menos 2 cuentas activas para solicitar un préstamo. Tiene: %d", activeAccounts));
         }
         
         if (loan.getRequestedAmount() == null || loan.getRequestedAmount().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new app.domain.Exceptions.InvalidAmountException("Loan amount must be greater than 0");
+            throw new app.domain.Exceptions.InvalidAmountException("El monto del préstamo debe ser mayor a 0");
         }
         
         BankAccount disbursementAccount = bankAccountPort.findByAccountNumber(loan.getDisbursementTargetAccount().getAccountNumber());
         if (disbursementAccount == null) {
-            throw new BusinessException("Disbursement account not found");
+            throw new BusinessException("Cuenta de desembolse no encontrada");
         }
         
         if (!disbursementAccount.getClient().getId().equals(loan.getClient().getId())) {
-            throw new IllegalArgumentException("Disbursement account must belong to the client");
+            throw new IllegalArgumentException("La cuenta de desembolse debe pertenecer al cliente");
         }
         
         loan.setLoanStatus(LoanStatus.UNDER_REVIEW);
         Loan saved = loanPort.save(loan);
-        recordLog("LOAN_REQUESTED", saved, null);
+        recordLog("PRESTAMO_SOLICITADO", saved, null);
         
         return saved;
     }
@@ -64,15 +64,15 @@ public class LoanService {
     @Transactional
     public Loan approveLoan(Long loanId, Long userId) {
         Loan loan = loanPort.findById(loanId);
-        if (loan == null) throw new BusinessException("Loan not found");
+        if (loan == null) throw new BusinessException("Préstamo no encontrado");
         
         if (loan.getLoanStatus() != LoanStatus.UNDER_REVIEW) {
-            throw new IllegalStateException("Only loans UNDER_REVIEW can be approved");
+            throw new IllegalStateException("Solo se pueden aprobar préstamos EN REVISIÓN");
         }
         
         loan.setLoanStatus(LoanStatus.APPROVED);
         Loan saved = loanPort.save(loan);
-        recordLog("LOAN_APPROVED", saved, String.valueOf(userId));
+        recordLog("PRESTAMO_APROBADO", saved, String.valueOf(userId));
         
         return saved;
     }
@@ -80,10 +80,10 @@ public class LoanService {
     @Transactional
     public Loan disburseLoan(Long loanId) {
         Loan loan = loanPort.findById(loanId);
-        if (loan == null) throw new BusinessException("Loan not found");
+        if (loan == null) throw new BusinessException("Préstamo no encontrado");
         
         if (loan.getLoanStatus() != LoanStatus.APPROVED) {
-            throw new IllegalStateException("Only APPROVED loans can be disbursed");
+            throw new IllegalStateException("Solo se pueden desembolsar préstamos APROBADOS");
         }
         
         transactionService.deposit(
@@ -95,13 +95,17 @@ public class LoanService {
         loan.setDisbursementDate(LocalDate.now());
         
         Loan updated = loanPort.save(loan);
-        recordLog("LOAN_DISBURSED", updated, null);
+        recordLog("PRESTAMO_DESEMBOLSADO", updated, null);
         
         return updated;
     }
     
     public List<Loan> findAll() {
         return loanPort.findAll();
+    }
+    
+    public List<Loan> findByRequestingClientId(Long requestingClientId) {
+        return loanPort.findByRequestingClientId(requestingClientId);
     }
     
     public Loan findById(Long id) {
