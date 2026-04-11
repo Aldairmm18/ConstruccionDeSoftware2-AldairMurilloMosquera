@@ -26,16 +26,12 @@
 Nota base = Σ((puntaje_i / 5) * peso_i) / 20 = 63 / 20 = **3.15**
 
 ### Penalizaciones aplicadas
-| Penalizacion | Motivo | Reduccion |
-|---|---|---|
-| Acoplamiento a framework | Anotacion @Service de Spring en clases de servicio de dominio (BankAccountDomainService, otros) | -25% |
-
-Nota tras penalizacion: 3.15 × 0.75 = **2.36**
+Ninguna.
 
 ---
 
 ## Nota final
-**2.4 / 5.0**
+**3.2 / 5.0**
 
 ---
 
@@ -50,7 +46,6 @@ Nota tras penalizacion: 3.15 × 0.75 = **2.36**
 - **BusinessException** para manejo de reglas de negocio.
 
 ### Negativos
-- **Acoplamiento Spring en dominio:** @Service y @RequiredArgsConstructor de Spring inyectados en BankAccountDomainService y otros servicios. Esto acopla el dominio al framework de infraestructura. Los servicios de dominio deben ser POJOs con constructor explicito.
 - **ClientRole enum vacio:** `public enum ClientRole {}` no tiene ningun valor. La distincion entre cliente persona natural y empresa queda invalida.
 - **Sin UserPort:** No existe puerto para la entidad Usuario. Los servicios de autenticacion y gestion de usuarios no tienen contrato de dominio.
 - **Sin BitacoraPort:** OperationsLog existe como entidad pero no tiene puerto de salida. No se puede registrar eventos de auditoria desde el dominio.
@@ -62,10 +57,9 @@ Nota tras penalizacion: 3.15 × 0.75 = **2.36**
 ---
 
 ## Recomendaciones
-1. Eliminar @Service y @RequiredArgsConstructor de Spring de los servicios de dominio. Usar constructor explicito con los puertos como parametros.
-2. Definir valores en ClientRole: NATURAL_PERSON, CORPORATE al menos.
-3. Crear UserPort con: `findByUsername(String username)`, `existsByUsername(String)`, `save(User)`.
-4. Crear BitacoraPort con: `void append(OperationsLog event)` y `List<OperationsLog> findByProductId(String productId)`.
-5. Agregar `findPendingApprovalOlderThanMinutes(int minutes)` en TransferPort para soportar el vencimiento de transferencias de alto monto.
-6. Agregar validacion de transferencia de alto monto en TransferDomainService: si monto > umbral y cuenta de empresa, requerir aprobacion de supervisor.
-7. Revisar la jerarquia Cliente/CorporateClient y alinearla con el modelo del enunciado.
+1. Definir valores en ClientRole: NATURAL_PERSON, CORPORATE al menos.
+2. Crear UserPort con: `findByUsername(String username)`, `existsByUsername(String)`, `save(User)`.
+3. Crear BitacoraPort con: `void append(OperationsLog event)` y `List<OperationsLog> findByProductId(String productId)`.
+4. Agregar `findPendingApprovalOlderThanMinutes(int minutes)` en TransferPort para soportar el vencimiento de transferencias de alto monto.
+5. Agregar validacion de transferencia de alto monto en TransferDomainService: si monto > umbral y cuenta de empresa, requerir aprobacion de supervisor.
+6. Revisar la jerarquia Cliente/CorporateClient y alinearla con el modelo del enunciado.
