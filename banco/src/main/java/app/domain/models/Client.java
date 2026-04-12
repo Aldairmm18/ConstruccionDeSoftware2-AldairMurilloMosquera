@@ -6,34 +6,26 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
-
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Inheritance(strategy = InheritanceType.JOINED)
 public class Client {
-    
-    @Id
-    private String id;
-    
-    @Column(unique = true, nullable = false)
-    private String identification;
-    
-    @Column(nullable = false)
+
+    private Long id;
+
+    private String document;
+
     private String name;
-    
-    @Column(nullable = false)
+
     private String address;
-    
-    @Column(nullable = false)
+
     private String phone;
-    
-    @Column(unique = true, nullable = false)
+
     private String email;
-    
-    // VALIDACIÓN: Email con formato correcto
+
+    private ClientStatus clientStatus;
+
+    // VALIDACION: Email con formato correcto
     public void setEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new InvalidEmailException("Email es obligatorio");
@@ -44,8 +36,8 @@ public class Client {
         }
         this.email = email.toLowerCase().trim();
     }
-    
-    // VALIDACIÓN: Teléfono colombiano
+
+    // VALIDACION: Teléfono colombiano
     public void setPhone(String phone) {
         if (phone == null || phone.isBlank()) {
             throw new InvalidPhoneException("Teléfono es obligatorio");

@@ -6,33 +6,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
-
-@Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class CorporateClient extends Client {
-    
-    @Column(nullable = false)
+
     private String companyName;
-    
-    @Column(unique = true, nullable = false)
+
     private String NIT;
-    
-    @Column(nullable = false)
+
     private String legalRepresentative;
-    
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
-    private User user;
-    
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "account_id")
-    private BankAccount account;
-    
-    // VALIDACIÓN: NIT con dígito verificador
+
+    // VALIDACION: NIT con dígito verificador
     public void setNIT(String nit) {
         if (nit == null || nit.isBlank()) {
             throw new InvalidNitException("NIT es obligatorio");
@@ -40,19 +26,19 @@ public class CorporateClient extends Client {
         if (!nit.matches("\\d{9}-\\d")) {
             throw new InvalidNitException("NIT debe tener formato XXXXXXXXX-X");
         }
-        
+
         // Validar dígito verificador
         String numero = nit.substring(0, 9);
         char dvEsperado = calcularDVNIT(numero);
         char dvIngresado = nit.charAt(10);
-        
+
         if (dvEsperado != dvIngresado) {
             throw new InvalidNitException("Dígito verificador de NIT inválido");
         }
-        
+
         this.NIT = nit;
     }
-    
+
     private char calcularDVNIT(String nit) {
         int[] pesos = {71, 67, 59, 53, 47, 43, 41, 37, 29};
         int suma = 0;

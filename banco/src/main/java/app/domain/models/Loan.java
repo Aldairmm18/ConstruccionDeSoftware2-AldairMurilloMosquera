@@ -4,40 +4,33 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Loan {
-    
-    @Id
-    private String id;
-    
-    @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
+
+    private Long id;
+
     private Client client;
-    
-    @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
-    
-    @Column(nullable = false, precision = 5, scale = 2)
-    private BigDecimal interestRate;
-    
-    @Column(nullable = false)
+
+    private LoanType loanType;
+
+    private LoanStatus loanStatus;
+
+    private BigDecimal requestedAmount;
+
+    private BigDecimal approvedAmount;
+
+    private Double interestRate;
+
     private int termMonths;
-    
-    @Column(nullable = false)
-    private LocalDateTime requestDate;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LoanStatus status;
-    
-    @ManyToOne
-    @JoinColumn(name = "disbursement_account_id", nullable = false)
-    private BankAccount disbursementAccount;
+
+    private LocalDate approvalDate;
+
+    private LocalDate disbursementDate;
+
+    private BankAccount disbursementTargetAccount;
 }

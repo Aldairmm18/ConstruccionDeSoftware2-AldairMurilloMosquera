@@ -6,67 +6,61 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class BankAccount {
-    
-    @Id
-    private String id;
-    
-    @Column(unique = true, nullable = false)
+
+    private Long id;
+
     private String accountNumber;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+
     private AccountType accountType;
-    
-    @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal balance;
-    
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    
-    @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
-    
+
+    private AccountStatus accountStatus;
+
+    private Currency currency;
+
+    private BigDecimal currentBalance;
+
+    private LocalDate openingDate;
+
+    private PersonClient client;
+
     // VALIDATION: Balance cannot be negative
-    public void setBalance(BigDecimal balance) {
-        if (balance == null) {
+    public void setCurrentBalance(BigDecimal currentBalance) {
+        if (currentBalance == null) {
             throw new IllegalArgumentException("El saldo no puede ser nulo");
         }
-        if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InsufficientFundsException("El saldo no puede ser negativo. Valor: " + balance);
+        if (currentBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientFundsException("El saldo no puede ser negativo. Valor: " + currentBalance);
         }
-        this.balance = balance;
+        this.currentBalance = currentBalance;
     }
-    
+
     // BLINDED METHOD: Debit with validations
     public void debit(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("El monto debe ser mayor a 0");
         }
-        BigDecimal newBalance = this.balance.subtract(amount);
+        BigDecimal newBalance = this.currentBalance.subtract(amount);
         if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new InsufficientFundsException(
-                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s", 
-                    this.balance, amount)
+                String.format("Saldo insuficiente. Disponible: %s, Requerido: %s",
+                    this.currentBalance, amount)
             );
         }
-        this.balance = newBalance;
+        this.currentBalance = newBalance;
     }
-    
+
     // BLINDED METHOD: Credit with validations
     public void credit(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("El monto debe ser mayor a 0");
         }
-        this.balance = this.balance.add(amount);
+        this.currentBalance = this.currentBalance.add(amount);
     }
 }
