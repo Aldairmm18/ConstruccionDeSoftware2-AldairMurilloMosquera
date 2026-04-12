@@ -26,6 +26,8 @@ C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\ClientManagementUseCaseImpl.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\LoanManagementUseCase.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\LoanManagementUseCaseImpl.java
+C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\TransactionManagementUseCase.java
+C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\TransactionManagementUseCaseImpl.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\TransferManagementUseCase.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\application\usecases\TransferManagementUseCaseImpl.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\BancoApplication.java
@@ -71,14 +73,9 @@ C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\ports\TransferPort.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\ports\UserPort.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\BankAccountDomainService.java
-C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\BankAccountService.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\ClientDomainService.java
-C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\ClientService.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\LoanDomainService.java
-C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\LoanService.java
-C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\TransactionService.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\TransferDomainService.java
-C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\TransferService.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\UserService.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\domain\services\ValidationUtils.java
 C:\Users\Aldair Murillo\ConstruccionDeSofware2-AldairMurillo\banco\src\main\java\app\infrastructure\security\JwtAuthenticationFilter.java
