@@ -176,15 +176,15 @@ public class ClientService {
     }
     
     private boolean calculateNitVerificationDigit(String nit, int expectedDv) {
-        int[] weights = {3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71};
+        int[] weights = {71, 67, 59, 53, 47, 43, 41, 37, 29};
         int sum = 0;
-        String reversedNit = new StringBuilder(nit).reverse().toString();
-        for (int i = 0; i < reversedNit.length(); i++) {
-            int digit = Character.getNumericValue(reversedNit.charAt(i));
-            sum += digit * weights[i];
+        for (int i = 0; i < 9; i++) {
+            sum += Character.getNumericValue(nit.charAt(i)) * weights[i];
         }
         int remainder = sum % 11;
         int calculatedDv = (remainder > 1) ? (11 - remainder) : remainder;
-        return calculatedDv == expectedDv;
+        
+        char dvChar = (calculatedDv == 10) ? '0' : Character.forDigit(calculatedDv, 10);
+        return dvChar == Character.forDigit(expectedDv, 10);
     }
 }
