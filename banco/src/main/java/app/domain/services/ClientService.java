@@ -21,17 +21,7 @@ public class ClientService {
 
     @Transactional
     public PersonClient registerClient(PersonClient client) {
-        if (clientPort.existsByDocument(client.getDocument())) {
-            throw new app.domain.Exceptions.DuplicateIdentificationException(
-                "Ya existe un cliente con identificación: " + client.getDocument());
-        }
-        
-        if (clientPort.existsByEmail(client.getEmail())) {
-            throw new app.domain.Exceptions.InvalidEmailException(
-                "Ya existe un cliente con email: " + client.getEmail());
-        }
-
-        // Reglas de Negocio y Validaciones
+        // Validacion centralizada en el dominio para evitar duplicar consultas
         clientDomainService.validateClientCreation(client);
         
         // Persistencia Final

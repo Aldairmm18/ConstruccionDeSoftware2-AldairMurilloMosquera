@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Random;
 import java.util.List;
 
 /**
@@ -24,10 +23,16 @@ public class BankAccountService {
     private final BankAccountDomainService bankAccountDomainService;
 
     public BankAccount openAccount(BankAccount account) {
-        if (account.getAccountNumber() == null) {
-            account.setAccountNumber(generateAccountNumber());
+        boolean accountNumberProvided = account.getAccountNumber() != null;
+        if (!accountNumberProvided) {
+            // Mejora de logica: reintenta si el numero generado ya existe
+            int attempts = 0;
+            do {
+                account.setAccountNumber(generateAccountNumber());
+                attempts++;
+            } while (bankAccountPort.existsByAccountNumber(account.getAccountNumber()) && attempts < 5);
         }
-        
+
         if (bankAccountPort.existsByAccountNumber(account.getAccountNumber())) {
             throw new BusinessException("Account number already exists");
         }
@@ -50,7 +55,9 @@ public class BankAccountService {
     }
 
     private String generateAccountNumber() {
-        // Simple 10-digit account generator
-        return String.format("%010d", new Random().nextInt(1000000000));
+        // Generador mas seguro: prefijo + timestamp parcial + aleatorio de 4 digitos
+        String timestamp = String.valueOf(System.currentTimeMillis()).substring(5);
+        String random = String.format("%04d", new java.util.Random().nextInt(9999));
+        return "COL" + timestamp + random;
     }
 }
