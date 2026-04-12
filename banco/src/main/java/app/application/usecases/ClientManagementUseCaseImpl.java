@@ -38,7 +38,6 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
     @Override
     @Transactional
     public CorporateClient registerCorporateCompany(CorporateClient company) {
-        // CorporateClient uses document field inherited from Client
         if (clientPort.existsByDocument(company.getDocument())) {
             throw new DuplicateIdentificationException("NIT already registered: " + company.getDocument());
         }
@@ -46,10 +45,9 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
             throw new InvalidEmailException("Email already registered: " + company.getEmail());
         }
 
-        // CorporateClient is not directly saved via ClientPort (which works with PersonClient)
-        // We treat CorporateClient registration as a special case
-        registerLog("CORPORATE_CLIENT_REGISTERED", company.getDocument());
-        return company;
+        CorporateClient saved = (CorporateClient) clientPort.save(company);
+        registerLog("CORPORATE_CLIENT_REGISTERED", saved.getId() != null ? saved.getId().toString() : null);
+        return saved;
     }
 
     @Override
