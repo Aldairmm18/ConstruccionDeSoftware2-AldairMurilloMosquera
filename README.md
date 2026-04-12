@@ -1,85 +1,122 @@
-# Sistema de Gestión Bancaria Senior - Construcción de Software II
+# Sistema de Gestión Bancaria - Construcción de Software II
 
-## 🏛️ Descripción General
-Un sistema de gestión bancaria de alto rendimiento, seguro y arquitectónicamente blindado. Desarrollado con **Spring Boot 3.2.6** y **Java 17**, este proyecto sigue los principios de **Clean Architecture (Arquitectura Hexagonal)** y **Domain-Driven Design (DDD)** para garantizar la máxima mantenibilidad y seguridad.
+## Descripción General
 
-El sistema ha sido sometido a un proceso de **Blindaje (Hardening)** profundo para asegurar la integridad de los datos y el cumplimiento de reglas de negocio críticas.
+Sistema bancario desarrollado con **Spring Boot 3.3.6** y **Java 21**, aplicando los principios de **Arquitectura Hexagonal (Clean Architecture)** y **Domain-Driven Design (DDD)**.
 
-## 🛡️ Características de Blindaje y Reglas de Negocio
+El dominio está completamente aislado de Spring y JPA. Las capas de aplicación, interfaces e infraestructura son las únicas que dependen de frameworks externos.
 
-### 1. Seguridad de Acceso
-- **BCrypt Password Hardening**: Todas las contraseñas se almacenan hasheadas con **BCrypt (12 rounds)**. Nunca se procesa texto plano.
-- **Control de Roles**: Diferenciación estricta entre Administradores, Cajeros y Usuarios del sistema.
+## Información Académica
 
-### 2. Integridad Financiera
-- **Saldos No Negativos**: Validación forzada en el modelo de dominio (`BankAccount`). Es imposible realizar una operación que resulte en saldo negativo.
-- **Validación de Identidad**: 
-  - **NIT (Empresas)**: Validación algorítmica del dígito de verificación colombiano.
-  - **Cédula (Personas)**: Validación de formato y longitud.
-  - **Email/Teléfono**: Expresiones regulares estrictas (RFC 5322 y formato móvil colombiano).
+- **Estudiante**: Aldair Murillo Mosquera
+- **Profesor**: Andrés Felipe Sánchez
+- **Materia**: Construcción de Software II
+- **Institución**: Tecnológico de Antioquia
 
-### 3. Lógica de Operaciones (Business Rules)
-- **Transferencias**:
-  - Ventana de aprobación de **60 minutos**.
-  - Tarea programada (`@Scheduled`) para expiración automática de transferencias pendientes.
-  - Validación de cuenta origen != cuenta destino.
-- **Préstamos (Loans)**:
-  - Requisito de **mínimo 2 cuentas activas** para ser elegible.
-  - Desembolso bloqueado si la cuenta destino no pertenece al solicitante.
-  - Ciclo de vida: `UNDER_REVIEW` ➔ `APPROVED` ➔ `DISBURSED`.
+## Tecnologías Utilizadas
 
-### 4. Auditabilidad (Operations Log)
-- **Ledger Inmutable**: Cada depósito, retiro, transferencia y préstamo genera un registro en el log de operaciones (`OperationsLog`) con detalles técnicos y marcas de tiempo.
+| Tecnología | Versión | Uso |
+|---|---|---|
+| Java | 21 | Lenguaje principal |
+| Spring Boot | 3.3.6 | Framework de aplicación |
+| Spring Security | 6 | Autenticación JWT + BCrypt |
+| Spring Data JPA | 3.3.6 | Persistencia (solo en capa application) |
+| MySQL | 8.0 | Base de datos relacional |
+| Lombok | latest | Reducción de boilerplate |
+| JJWT | 0.12+ | Generación y validación de tokens JWT |
+| Maven | 3.x | Gestión de dependencias |
 
-## 🚀 Stack Tecnológico
-- **Lenguaje**: Java 17 (Requerido)
-- **Framework**: Spring Boot 3.2.6
-- **Persistencia**: JPA / Hibernate con MySQL 8.0
-- **Seguridad**: Spring Security 6 + BCrypt
-- **Nomenclatura**: Código en **Inglés profesional**, Mensajes de error en **Español** para el usuario.
+## Arquitectura - Regla Clave
 
-## 🏗️ Estructura del Proyecto
-El proyecto sigue el patrón de **Arquitectura Hexagonal**:
-
-```text
-src/main/java/app/
-├── domain/                    # Lógica de Negocio (Core)
-│   ├── models/                # Entidades de Dominio (BankAccount, Loan, User)
-│   ├── ports/                 # Interfaces (Contratos de infraestructura)
-│   ├── services/              # SERVICIOS CONSOLIDADOS (TransactionService, TransferService)
-│   └── Exceptions/            # Excepciones personalizadas (InsuficienteFundsException)
-├── application/               # Adaptadores de Entrada/Salida
-│   └── adapters/
-│       └── persistence/       # Implementación SQL (Spring Data JPA)
-├── infrastructure/            # Aspectos Cross-cutting (Security, Filter, Config)
-└── interfaces/                # Adaptadores de Entrada REST (Controllers)
+```
+domain/     → Java PURO. CERO Spring. CERO JPA.
+application/ → Spring (@Service, @Transactional, JPA Entities, Adapters)
+interfaces/ → Spring (@RestController, DTOs)
+infrastructure/ → Spring (@Component, Security, JWT)
 ```
 
-## ⚙️ Cómo Ejecutar el Proyecto
+## Estructura de Carpetas
 
-### 1. Requisitos
-- **JDK 17** y **MySQL Server**.
+```
+banco/src/main/java/app/
+├── domain/
+│   ├── models/          # Modelos de dominio puros (sin @Entity)
+│   │   ├── BankAccount.java, Client.java, PersonClient.java
+│   │   ├── CorporateClient.java, User.java, Loan.java
+│   │   ├── Transfer.java, Transaction.java, OperationsLog.java
+│   │   └── enums: AccountType, AccountStatus, ClientStatus,
+│   │             Currency, LoanStatus, LoanType, TransferStatus,
+│   │             TransactionType, SystemRole, UserStatus, ClientRole
+│   ├── ports/           # Interfaces puras (contratos hexagonales)
+│   │   ├── BankAccountPort, ClientPort, LoanPort
+│   │   ├── TransferPort, TransactionPort, UserPort
+│   │   ├── OperationsLogPort, PasswordHasher
+│   └── services/        # Logica de negocio pura (sin @Service)
+│       ├── AccountService, ClientService, LoanService
+│       ├── TransferService, DepositService, WithdrawalService
+│       ├── BillPaymentService, UserService, AuditService
+│       ├── TransactionQueryService, ValidationService
+│   └── Exceptions/      # Excepciones de negocio
+├── application/
+│   ├── usecases/        # Casos de uso (@Service, @Transactional)
+│   │   ├── AccountManagementUseCase(Impl)
+│   │   ├── ClientManagementUseCase(Impl)
+│   │   ├── TransferManagementUseCase(Impl)
+│   │   ├── TransactionManagementUseCase(Impl)
+│   │   └── LoanManagementUseCase(Impl)
+│   └── adapters/persistence/sql/
+│       ├── entities/    # JPA Entities (@Entity)
+│       ├── repositories/ # Spring Data JPA repositories
+│       └── *PersistenceAdapter.java  # Implementan los ports
+├── interfaces/
+│   └── controllers/     # REST Controllers (@RestController)
+│       ├── AuthController, BankAccountController
+│       ├── ClientController, TransferController
+│       ├── TransactionController, LoanController
+│       └── requests/, responses/  # DTOs
+└── infrastructure/
+    └── security/        # JWT + Spring Security
+        ├── SecurityConfig, JwtUtil
+        ├── JwtAuthenticationFilter
+        ├── UserDetailsServiceImpl
+        └── BCryptPasswordHasherAdapter
+```
 
-### 2. Configuración
-Ajustar `src/main/resources/application.properties`:
+## Reglas de Negocio
+
+- **Saldo no negativo**: validado en `BankAccount.debit()` (dominio)
+- **Transferencias**: expiran en 60 minutos; auto-expiradas por `@Scheduled`
+- **Transferencias de alto monto**: >10M COP desde cuenta empresarial → estado `AWAITING_APPROVAL`
+- **Prestamos**: requieren minimo 2 cuentas activas para aplicar
+- **Autenticacion**: maximo 5 intentos fallidos → bloqueo 15 minutos
+- **Contrasenas**: BCrypt 12 rounds (solo en capa infrastructure)
+- **NIT empresas**: validacion algoritmica del digito verificador colombiano
+- **Cedula personas**: validacion de formato 7-10 digitos
+- **Email/Telefono**: regex estricto (formato colombiano movil 3XXXXXXXXX)
+
+## Como Ejecutar
+
+### Requisitos
+- JDK 21
+- MySQL 8.0
+
+### Configuracion
+Editar `banco/src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/banco?createDatabaseIfNotExist=true
 spring.datasource.username=tu_usuario
-spring.datasource.password=tu_contraseña
+spring.datasource.password=tu_contrasena
 ```
 
-### 3. Ejecución
-```powershell
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-17"; .\mvnw spring-boot:run
+### Ejecucion
+```bash
+cd banco
+./mvnw spring-boot:run
 ```
 
-### 4. Pruebas (Postman)
-Se incluye la colección **`Hardened_Banking_System.postman_collection.json`** en la raíz del repositorio con todos los endpoints actualizados y listos para probar.
-
-## 👥 Autores
-- **Desarrollador**: Aldair Murillo Mosquera - Tecnológico de Antioquia
-- **Consultor Especialista**: Antigravity AI (Implementation & Hardening)
-- **Profesor**: Andrés Felipe Sánchez
+### Pruebas
+Se incluye `Hardened_Banking_System.postman_collection.json` en la raiz del repositorio con todos los endpoints.
 
 ---
-*Este sistema ha sido blindado para prevenir bypass de seguridad y asegurar un registro contable de grado bancario.*
+
+*Proyecto academico - Construccion de Software II - Tecnologico de Antioquia*
