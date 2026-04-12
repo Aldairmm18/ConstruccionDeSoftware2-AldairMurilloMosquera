@@ -2,26 +2,16 @@ package app.domain.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
-    private Long id;
-
-    private String name;
-
-    private String document;
-
-    private String email;
-
-    private String phone;
-
-    private String address;
+public class User extends Person {
 
     private LocalDate birthDate;
 
