@@ -3,203 +3,201 @@ package app.domain.services;
 import app.domain.Exceptions.*;
 import app.domain.models.*;
 import app.domain.ports.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Service for LOAN OPERATIONS
  * Handles: Loan requests, approvals, rejections, and disbursements
  */
-@Service
 public class LoanService {
-    
-    @Autowired
-    private LoanRepository loanRepository;
-    
-    @Autowired
-    private ClientRepository clientRepository;
-    
-    @Autowired
-    private BankAccountRepository accountRepository;
-    
-    @Autowired
-    private AuditService auditService;
-    
+
+    private final LoanPort loanPort;
+    private final ClientPort clientPort;
+    private final BankAccountPort bankAccountPort;
+    private final AuditService auditService;
+
     private static final int MINIMUM_ACCOUNTS_FOR_LOAN = 2;
-    
+
+    public LoanService(LoanPort loanPort, ClientPort clientPort, BankAccountPort bankAccountPort,
+                       AuditService auditService) {
+        this.loanPort = loanPort;
+        this.clientPort = clientPort;
+        this.bankAccountPort = bankAccountPort;
+        this.auditService = auditService;
+    }
+
     // ==================== CREATE OPERATIONS ====================
-    
+
     /**
      * Requests a new loan
      * RULE: Client must have at least 2 active accounts
      */
-    @Transactional
     public Loan requestLoan(
-            String clientId,
+            Long clientId,
             BigDecimal amount,
-            BigDecimal interestRate,
+            Double interestRate,
             int termMonths,
-            String disbursementAccountId) {
-        
-        Client client = findClientOrThrow(clientId);
+            Long disbursementAccountId) {
+
+        PersonClient client = findClientOrThrow(clientId);
         validateMinimumAccounts(clientId);
         validateLoanAmount(amount);
-        
+
         BankAccount disbursementAccount = validateDisbursementAccount(
             disbursementAccountId, clientId);
-        
+
         Loan loan = new Loan();
-        loan.setId(UUID.randomUUID().toString());
+        loan.setId(null);
         loan.setClient(client);
-        loan.setAmount(amount);
+        loan.setRequestedAmount(amount);
         loan.setInterestRate(interestRate);
         loan.setTermMonths(termMonths);
-        loan.setRequestDate(LocalDateTime.now());
-        loan.setStatus(LoanStatus.PENDING);
-        loan.setDisbursementAccount(disbursementAccount);
-        
-        Loan saved = loanRepository.save(loan);
-        auditService.logOperation("LOAN_REQUESTED", saved.getId());
-        
+        loan.setLoanStatus(LoanStatus.PENDING);
+        loan.setDisbursementTargetAccount(disbursementAccount);
+
+        Loan saved = loanPort.save(loan);
+        auditService.logOperation("LOAN_REQUESTED", saved.getId() != null ? saved.getId().toString() : null);
+
         return saved;
     }
-    
+
     // ==================== APPROVAL OPERATIONS ====================
-    
+
     /**
      * Approves a loan request
      * Only ADMINISTRATORS can approve loans
      */
-    @Transactional
-    public Loan approveLoan(String loanId, String adminId) {
+    public Loan approveLoan(Long loanId, String adminId) {
         Loan loan = findLoanOrThrow(loanId);
-        
-        validateSolicitadoStatus(loan);
-        
-        loan.setStatus(LoanStatus.APPROVED);
-        Loan updated = loanRepository.save(loan);
-        
-        auditService.logOperation("LOAN_APPROVED", updated.getId());
-        
+
+        validatePendingStatus(loan);
+
+        loan.setLoanStatus(LoanStatus.APPROVED);
+        loan.setApprovalDate(LocalDate.now());
+        Loan updated = loanPort.save(loan);
+
+        auditService.logOperation("LOAN_APPROVED", updated.getId() != null ? updated.getId().toString() : null);
+
         return updated;
     }
-    
+
     /**
      * Rejects a loan request
      */
-    @Transactional
-    public Loan rejectLoan(String loanId, String reason) {
+    public Loan rejectLoan(Long loanId, String reason) {
         Loan loan = findLoanOrThrow(loanId);
-        
-        validateSolicitadoStatus(loan);
-        
-        loan.setStatus(LoanStatus.REJECTED);
-        Loan updated = loanRepository.save(loan);
-        
-        auditService.logOperation("LOAN_REJECTED", updated.getId());
-        
+
+        validatePendingStatus(loan);
+
+        loan.setLoanStatus(LoanStatus.REJECTED);
+        Loan updated = loanPort.save(loan);
+
+        auditService.logOperation("LOAN_REJECTED", updated.getId() != null ? updated.getId().toString() : null);
+
         return updated;
     }
-    
+
     // ==================== DISBURSEMENT OPERATIONS ====================
-    
+
     /**
      * Disburses an approved loan
      * Credits the loan amount to the disbursement account
      */
-    @Transactional
-    public Loan disburseLoan(String loanId) {
+    public Loan disburseLoan(Long loanId) {
         Loan loan = findLoanOrThrow(loanId);
-        
+
         validateApprovedStatus(loan);
-        
-        BankAccount account = accountRepository.findById(loan.getDisbursementAccount().getId())
-            .orElseThrow(() -> new BusinessException(
-                "Cuenta de desembolso no encontrada"));
-        
-        account.credit(loan.getAmount());
-        accountRepository.save(account);
-        
-        loan.setStatus(LoanStatus.DISBURSED);
-        Loan updated = loanRepository.save(loan);
-        
-        auditService.logOperation("LOAN_DISBURSED", updated.getId());
-        
+
+        BankAccount account = bankAccountPort.findById(loan.getDisbursementTargetAccount().getId());
+        if (account == null) {
+            throw new BusinessException("Cuenta de desembolso no encontrada");
+        }
+
+        account.credit(loan.getRequestedAmount());
+        bankAccountPort.save(account);
+
+        loan.setLoanStatus(LoanStatus.DISBURSED);
+        loan.setDisbursementDate(LocalDate.now());
+        Loan updated = loanPort.save(loan);
+
+        auditService.logOperation("LOAN_DISBURSED", updated.getId() != null ? updated.getId().toString() : null);
+
         return updated;
     }
-    
+
     // ==================== QUERY OPERATIONS ====================
-    
-    public List<Loan> findClientLoans(String clientId) {
-        return loanRepository.findByClientId(clientId);
+
+    public List<Loan> findClientLoans(Long clientId) {
+        return loanPort.findByRequestingClientId(clientId);
     }
-    
-    public Optional<Loan> findById(String id) {
-        return loanRepository.findById(id);
+
+    public Loan findById(Long id) {
+        return loanPort.findById(id);
     }
-    
+
     public List<Loan> findAll() {
-        return loanRepository.findAll();
+        return loanPort.findAll();
     }
-    
+
     // ==================== VALIDATION METHODS ====================
-    
-    private Client findClientOrThrow(String clientId) {
-        return clientRepository.findById(clientId)
-            .orElseThrow(() -> new UserNotFoundException(
-                "Cliente no encontrado: " + clientId));
+
+    private PersonClient findClientOrThrow(Long clientId) {
+        PersonClient client = clientPort.findById(clientId);
+        if (client == null) {
+            throw new UserNotFoundException("Cliente no encontrado: " + clientId);
+        }
+        return client;
     }
-    
-    private Loan findLoanOrThrow(String loanId) {
-        return loanRepository.findById(loanId)
-            .orElseThrow(() -> new BusinessException(
-                "Préstamo no encontrado: " + loanId));
+
+    private Loan findLoanOrThrow(Long loanId) {
+        Loan loan = loanPort.findById(loanId);
+        if (loan == null) {
+            throw new BusinessException("Préstamo no encontrado: " + loanId);
+        }
+        return loan;
     }
-    
-    private void validateMinimumAccounts(String clientId) {
-        long activeAccounts = accountRepository.countByClientId(clientId);
+
+    private void validateMinimumAccounts(Long clientId) {
+        long activeAccounts = bankAccountPort.countByClientId(clientId);
         if (activeAccounts < MINIMUM_ACCOUNTS_FOR_LOAN) {
             throw new LoanRejectedException(
                 String.format("Debe tener al menos %d cuentas activas. Tiene: %d",
                     MINIMUM_ACCOUNTS_FOR_LOAN, activeAccounts));
         }
     }
-    
+
     private void validateLoanAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Monto del préstamo debe ser mayor a 0");
         }
     }
-    
-    private BankAccount validateDisbursementAccount(String accountId, String clientId) {
-        BankAccount account = accountRepository.findById(accountId)
-            .orElseThrow(() -> new BusinessException(
-                "Cuenta de desembolso no encontrada"));
-        
-        if (!account.getClient().getId().equals(clientId)) {
+
+    private BankAccount validateDisbursementAccount(Long accountId, Long clientId) {
+        BankAccount account = bankAccountPort.findById(accountId);
+        if (account == null) {
+            throw new BusinessException("Cuenta de desembolso no encontrada");
+        }
+
+        if (account.getClient() == null || !account.getClient().getId().equals(clientId)) {
             throw new IllegalArgumentException(
                 "La cuenta de desembolso debe pertenecer al cliente");
         }
-        
+
         return account;
     }
-    
-    private void validateSolicitadoStatus(Loan loan) {
-        if (loan.getStatus() != LoanStatus.PENDING) {
+
+    private void validatePendingStatus(Loan loan) {
+        if (loan.getLoanStatus() != LoanStatus.PENDING) {
             throw new IllegalStateException(
                 "Solo se pueden procesar préstamos en estado PENDING");
         }
     }
-    
+
     private void validateApprovedStatus(Loan loan) {
-        if (loan.getStatus() != LoanStatus.APPROVED) {
+        if (loan.getLoanStatus() != LoanStatus.APPROVED) {
             throw new IllegalStateException(
                 "Solo se pueden desembolsar préstamos APROBADOS");
         }

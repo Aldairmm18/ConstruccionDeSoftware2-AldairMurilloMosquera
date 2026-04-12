@@ -2,35 +2,30 @@ package app.domain.services;
 
 import app.domain.Exceptions.*;
 import app.domain.models.*;
-import app.domain.ports.ClientRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import app.domain.ports.ClientPort;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Service for CLIENT MANAGEMENT
  * Handles: Registration, updates, queries, and validations for clients
  */
-@Service
 public class ClientService {
-    
-    @Autowired
-    private ClientRepository clientRepository;
-    
-    @Autowired
-    private AuditService auditService;
-    
+
+    private final ClientPort clientPort;
+    private final AuditService auditService;
+
+    public ClientService(ClientPort clientPort, AuditService auditService) {
+        this.clientPort = clientPort;
+        this.auditService = auditService;
+    }
+
     // ==================== CREATE OPERATIONS ====================
-    
+
     /**
      * Registers a new natural person client
      */
-    @Transactional
     public PersonClient createNaturalPerson(
             String idNumber,
             String firstName,
@@ -39,142 +34,105 @@ public class ClientService {
             String address,
             String phone,
             String email) {
-        
-        validateUniqueIdentification(idNumber);
+
+        validateUniqueDocument(idNumber);
         validateUniqueEmail(email);
-        
+
         PersonClient person = new PersonClient();
-        person.setId(UUID.randomUUID().toString());
-        person.setIdentification(idNumber);
-        person.setFirstName(firstName);
+        person.setId(null);
+        person.setDocument(idNumber);
+        person.setName(firstName);
         person.setLastName(lastName);
         person.setBirthDate(birthDate);
         person.setAddress(address);
         person.setPhone(phone);
         person.setEmail(email);
-        
-        PersonClient saved = clientRepository.save(person);
-        auditService.logOperation("NATURAL_PERSON_REGISTERED", saved.getId());
-        
+        person.setClientStatus(ClientStatus.ACTIVE);
+
+        PersonClient saved = clientPort.save(person);
+        auditService.logOperation("NATURAL_PERSON_REGISTERED", saved.getId() != null ? saved.getId().toString() : null);
+
         return saved;
     }
-    
-    /**
-     * Registers a new company client
-     */
-    @Transactional
-    public CorporateClient createCompany(
-            String nit,
-            String companyName,
-            String legalRepresentative,
-            String address,
-            String phone,
-            String email) {
-        
-        validateUniqueIdentification(nit);
-        validateUniqueEmail(email);
-        validateNIT(nit);
-        
-        CorporateClient company = new CorporateClient();
-        company.setId(UUID.randomUUID().toString());
-        company.setIdentification(nit);
-        company.setNit(nit);
-        company.setCompanyName(companyName);
-        company.setLegalRepresentative(legalRepresentative);
-        company.setAddress(address);
-        company.setPhone(phone);
-        company.setEmail(email);
-        
-        CorporateClient saved = clientRepository.save(company);
-        auditService.logOperation("CORPORATE_CLIENT_REGISTERED", saved.getId());
-        
-        return saved;
-    }
-    
+
     // ==================== UPDATE OPERATIONS ====================
-    
+
     /**
      * Updates client contact information
      */
-    @Transactional
-    public Client updateContactInfo(
-            String clientId,
+    public PersonClient updateContactInfo(
+            Long clientId,
             String newAddress,
             String newPhone,
             String newEmail) {
-        
-        Client client = findByIdOrThrow(clientId);
-        
+
+        PersonClient client = findByIdOrThrow(clientId);
+
         if (!client.getEmail().equals(newEmail)) {
             validateUniqueEmail(newEmail);
         }
-        
+
         client.setAddress(newAddress);
         client.setPhone(newPhone);
         client.setEmail(newEmail);
-        
-        Client updated = clientRepository.save(client);
-        auditService.logOperation("CLIENT_CONTACT_UPDATED", clientId);
-        
+
+        PersonClient updated = clientPort.save(client);
+        auditService.logOperation("CLIENT_CONTACT_UPDATED", clientId.toString());
+
         return updated;
     }
-    
+
     // ==================== QUERY OPERATIONS ====================
-    
-    /**
-     * Finds client by ID
-     */
-    public Client findByIdOrThrow(String id) {
-        return clientRepository.findById(id)
-            .orElseThrow(() -> new UserNotFoundException(
-                "Cliente no encontrado: " + id));
+
+    public PersonClient findByIdOrThrow(Long id) {
+        PersonClient client = clientPort.findById(id);
+        if (client == null) {
+            throw new UserNotFoundException("Cliente no encontrado: " + id);
+        }
+        return client;
     }
-    
-    public Optional<Client> findById(String id) {
-        return clientRepository.findById(id);
+
+    public PersonClient findById(Long id) {
+        return clientPort.findById(id);
     }
-    
-    public Optional<Client> findByIdentification(String identification) {
-        return clientRepository.findByIdentification(identification);
+
+    public PersonClient findByDocument(String document) {
+        return clientPort.findByDocument(document);
     }
-    
-    public Optional<Client> findByEmail(String email) {
-        return clientRepository.findByEmail(email);
+
+    public List<PersonClient> findAll() {
+        return clientPort.findAll();
     }
-    
-    public List<Client> findAll() {
-        return clientRepository.findAll();
-    }
-    
+
     // ==================== VALIDATION METHODS ====================
-    
-    private void validateUniqueIdentification(String identification) {
-        if (clientRepository.existsByIdentification(identification)) {
+
+    private void validateUniqueDocument(String document) {
+        if (clientPort.existsByDocument(document)) {
             throw new DuplicateIdentificationException(
-                "Ya existe un cliente con identificación: " + identification);
+                "Ya existe un cliente con identificación: " + document);
         }
     }
-    
+
     private void validateUniqueEmail(String email) {
-        if (clientRepository.existsByEmail(email)) {
+        if (clientPort.existsByEmail(email)) {
             throw new InvalidEmailException(
                 "Ya existe un cliente con email: " + email);
         }
     }
-    
+
     private void validateNIT(String nit) {
         if (!nit.matches("\\d{9}-\\d")) {
             throw new InvalidNitException("NIT debe tener formato XXXXXXXXX-X");
         }
-        
+
         String number = nit.substring(0, 9);
         int dv = Character.getNumericValue(nit.charAt(nit.length() - 1));
-        
+
         if (!calculateNitVerificationDigit(number, dv)) {
             throw new InvalidNitException("Dígito verificador de NIT inválido");
         }
     }
-    
+
     private boolean calculateNitVerificationDigit(String nit, int expectedDv) {
         int[] weights = {71, 67, 59, 53, 47, 43, 41, 37, 29};
         int sum = 0;
@@ -183,7 +141,7 @@ public class ClientService {
         }
         int remainder = sum % 11;
         int calculatedDv = (remainder > 1) ? (11 - remainder) : remainder;
-        
+
         char dvChar = (calculatedDv == 10) ? '0' : Character.forDigit(calculatedDv, 10);
         return dvChar == Character.forDigit(expectedDv, 10);
     }
