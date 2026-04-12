@@ -4,5 +4,7 @@ public enum TransferStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    EXPIRED
+    EXPIRED,
+    AWAITING_APPROVAL,
+    EXECUTED
 }

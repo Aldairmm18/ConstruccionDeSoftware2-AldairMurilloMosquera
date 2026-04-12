@@ -5,6 +5,8 @@ import java.util.List;
 
 public interface TransferPort {
 
+  List<Transfer> findPendingApprovalOlderThanMinutes(int minutes);
+
   Transfer save(Transfer transfer);
 
   Transfer findById(Long id);

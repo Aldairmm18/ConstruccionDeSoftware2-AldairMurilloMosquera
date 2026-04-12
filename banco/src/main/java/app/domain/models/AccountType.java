@@ -2,5 +2,7 @@ package app.domain.models;
 
 public enum AccountType {
     SAVINGS,
-    CHECKING
+    CHECKING,
+    PERSONAL,
+    BUSINESS
 }
