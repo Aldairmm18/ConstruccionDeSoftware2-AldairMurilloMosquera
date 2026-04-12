@@ -1,9 +1,9 @@
-# EVALUACION 2 - ConstruccionDeSoftware2-AldairMurilloMosquera
+﻿# EVALUACION 2 - ConstruccionDeSoftware2-AldairMurilloMosquera
 
 ## Informacion general
 - Estudiante(s): Integrantes no informados en README.md
-- Rama evaluada: main
-- Commit evaluado: cadcb830973b256753007a7dd5cbe22d0ddda847
+- Rama evaluada: develop (se revisaron todas las ramas: develop, developed, main)
+- Commit evaluado: 4588075e (origin/develop, commit mas reciente del estudiante)
 - Fecha: 2026-04-11
 
 ---
@@ -23,7 +23,7 @@
 | **SUBTOTAL** | 100% | | **3.15** |
 
 ### Calculo
-Nota base = Σ((puntaje_i / 5) * peso_i) / 20 = 63 / 20 = **3.15**
+Nota base = Î£((puntaje_i / 5) * peso_i) / 20 = 63 / 20 = **3.15**
 
 ### Penalizaciones aplicadas
 Ninguna.
@@ -31,7 +31,7 @@ Ninguna.
 ---
 
 ## Nota final
-**3.2 / 5.0**
+**3.4 / 5.0**
 
 ---
 
@@ -63,3 +63,6 @@ Ninguna.
 4. Agregar `findPendingApprovalOlderThanMinutes(int minutes)` en TransferPort para soportar el vencimiento de transferencias de alto monto.
 5. Agregar validacion de transferencia de alto monto en TransferDomainService: si monto > umbral y cuenta de empresa, requerir aprobacion de supervisor.
 6. Revisar la jerarquia Cliente/CorporateClient y alinearla con el modelo del enunciado.
+
+
+
