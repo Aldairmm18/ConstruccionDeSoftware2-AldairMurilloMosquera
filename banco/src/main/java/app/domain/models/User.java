@@ -1,27 +1,43 @@
 package app.domain.models;
 
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Entity
+@Table(name = "users")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends Person {
+public class User {
 
-    private LocalDate birthDate;
+    @Id
+    private String id;
+
+    @Column(unique = true, nullable = false)
     private String username;
 
     @JsonIgnore
+    @Column(nullable = false)
     private String passwordHash;
 
+    @Column(nullable = false)
+    private String fullName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private SystemRole systemRole;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus userStatus;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
     public void setPassword(String newPassword) {
         if (newPassword == null || newPassword.length() < 8) {
@@ -34,14 +50,5 @@ public class User extends Person {
     public boolean verifyPassword(String enteredPassword) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         return encoder.matches(enteredPassword, this.passwordHash);
-    }
-
-    public String getPassword() {
-        return passwordHash;
-    }
-
-    @JsonIgnore
-    public String getPasswordHash() {
-        return passwordHash;
     }
 }
