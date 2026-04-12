@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
+// TODO: Delegate business logic to domain services instead of implementing directly here
+
 @Service
 @RequiredArgsConstructor
 public class TransactionManagementUseCaseImpl implements TransactionManagementUseCase {
