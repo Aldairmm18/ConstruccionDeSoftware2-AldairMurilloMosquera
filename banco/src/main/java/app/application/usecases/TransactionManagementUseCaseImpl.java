@@ -2,109 +2,116 @@ package app.application.usecases;
 
 import app.domain.Exceptions.BusinessException;
 import app.domain.Exceptions.InvalidAmountException;
-import app.domain.models.BankAccount;
-import app.domain.models.OperationsLog;
-import app.domain.models.Transfer;
-import app.domain.models.TransferStatus;
-import app.domain.ports.BankAccountPort;
-import app.domain.ports.OperationsLogPort;
-import app.domain.ports.TransferPort;
+import app.domain.models.*;
+import app.domain.ports.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionManagementUseCaseImpl implements TransactionManagementUseCase {
 
-    private final BankAccountPort bankAccountPort;
-    private final OperationsLogPort operationsLogPort;
-    private final TransferPort transferPort;
+    private final TransactionRepository transactionRepository;
+    private final BankAccountRepository bankAccountRepository;
+    private final OperationsLogRepository operationsLogRepository;
 
     @Override
     @Transactional
-    public void deposit(String accountNumber, BigDecimal amount) {
+    public Transaction makeDeposit(String accountNumber, BigDecimal amount, String description) {
         validateAmount(amount);
+        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new BusinessException("Account not found"));
 
-        BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) {
-            throw new BusinessException("Cuenta no encontrada");
-        }
-
-        BigDecimal oldBalance = account.getCurrentBalance();
         account.credit(amount);
-        bankAccountPort.save(account);
+        bankAccountRepository.save(account);
 
-        recordLog("DEPOSITO", account, amount, oldBalance);
-        recordLedger(null, account, amount);
+        Transaction t = new Transaction();
+        t.setId(UUID.randomUUID().toString());
+        t.setAccount(account);
+        t.setAmount(amount);
+        t.setTransactionType(TransactionType.DEPOSIT);
+        t.setDate(LocalDateTime.now());
+        t.setDescription(description != null ? description : "Deposit");
+
+        Transaction saved = transactionRepository.save(t);
+        registerLog("DEPOSIT", saved.getId());
+        return saved;
     }
 
     @Override
     @Transactional
-    public void withdraw(String accountNumber, BigDecimal amount) {
+    public Transaction makeWithdrawal(String accountNumber, BigDecimal amount, String description) {
         validateAmount(amount);
+        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new BusinessException("Account not found"));
 
-        BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) {
-            throw new BusinessException("Cuenta no encontrada");
-        }
-
-        BigDecimal oldBalance = account.getCurrentBalance();
         account.debit(amount);
-        bankAccountPort.save(account);
+        bankAccountRepository.save(account);
 
-        recordLog("RETIRO", account, amount, oldBalance);
-        recordLedger(account, null, amount);
+        Transaction t = new Transaction();
+        t.setId(UUID.randomUUID().toString());
+        t.setAccount(account);
+        t.setAmount(amount);
+        t.setTransactionType(TransactionType.WITHDRAWAL);
+        t.setDate(LocalDateTime.now());
+        t.setDescription(description != null ? description : "Withdrawal");
+
+        Transaction saved = transactionRepository.save(t);
+        registerLog("WITHDRAWAL", saved.getId());
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Transaction payService(String accountNumber, String serviceName, String reference, BigDecimal amount) {
+        validateAmount(amount);
+        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new BusinessException("Account not found"));
+
+        account.debit(amount);
+        bankAccountRepository.save(account);
+
+        Transaction t = new Transaction();
+        t.setId(UUID.randomUUID().toString());
+        t.setAccount(account);
+        t.setAmount(amount);
+        t.setTransactionType(TransactionType.SERVICE_PAYMENT);
+        t.setDate(LocalDateTime.now());
+        t.setDescription(String.format("Payment %s - Ref: %s", serviceName, reference));
+
+        Transaction saved = transactionRepository.save(t);
+        registerLog("SERVICE_PAYMENT", saved.getId());
+        return saved;
+    }
+
+    @Override
+    public List<Transaction> getTransactionsByAccount(String accountNumber) {
+        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new BusinessException("Account not found"));
+        return transactionRepository.findByAccountId(account.getId());
     }
 
     private void validateAmount(BigDecimal amount) {
-        if (amount == null) {
-            throw new InvalidAmountException("El monto no puede ser nulo");
-        }
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("El monto debe ser mayor a 0");
-        }
-        if (amount.compareTo(new BigDecimal("999999999.99")) > 0) {
-            throw new InvalidAmountException("El monto excede el limite permitido");
-        }
-        if (amount.scale() > 2) {
-            throw new InvalidAmountException("El monto no puede tener mas de 2 decimales");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Amount must be greater than 0");
         }
     }
 
-    // Registro de bitacora con referencias a entidades reales
-    private void recordLog(String type, BankAccount account, BigDecimal amount, BigDecimal oldBalance) {
+    private void registerLog(String operation, String transactionId) {
         OperationsLog log = new OperationsLog();
-        log.setLogId(UUID.randomUUID().toString());
-        log.setOperationDateTime(LocalDateTime.now());
-        log.setOperationType(type);
-        log.setAffectedProduct(account);
-        log.setUser(null);
-
-        Map<String, Object> details = new HashMap<>();
-        details.put("accountNumber", account.getAccountNumber());
-        details.put("amount", amount);
-        details.put("oldBalance", oldBalance);
-        details.put("newBalance", account.getCurrentBalance());
-        log.setDetailData(details);
-
-        operationsLogPort.save(log);
-    }
-
-    private void recordLedger(BankAccount source, BankAccount target, BigDecimal amount) {
-        Transfer record = new Transfer();
-        record.setSourceAccount(source);
-        record.setTargetAccount(target);
-        record.setAmount(amount);
-        record.setTransferStatus(TransferStatus.COMPLETED);
-        record.setCreationDate(LocalDateTime.now());
-        record.setApprovalDate(LocalDateTime.now());
-        transferPort.save(record);
+        log.setId(UUID.randomUUID().toString());
+        log.setTimestamp(LocalDateTime.now());
+        log.setOperation(operation);
+        
+        Map<String, String> details = new HashMap<>();
+        details.put("transactionId", transactionId);
+        log.setDetails(details);
+        
+        operationsLogRepository.save(log);
     }
 }

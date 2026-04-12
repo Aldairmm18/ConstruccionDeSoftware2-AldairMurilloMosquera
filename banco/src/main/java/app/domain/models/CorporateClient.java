@@ -1,53 +1,66 @@
 package app.domain.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import app.domain.Exceptions.InvalidNitException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-/**
- * CORRECCIÓN 1: CorporateClient ahora hereda de Client.
- */
-@Getter
-@Setter
+import jakarta.persistence.*;
+
+@Entity
+@Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class CorporateClient extends Client {
-
-    private String businessName;
-    private String nit;
+    
+    @Column(nullable = false)
+    private String companyName;
+    
+    @Column(unique = true, nullable = false)
+    private String NIT;
+    
+    @Column(nullable = false)
     private String legalRepresentative;
-    private String username;
-
-    public void setNit(String nit) {
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "account_id")
+    private BankAccount account;
+    
+    // VALIDACIÓN: NIT con dígito verificador
+    public void setNIT(String nit) {
         if (nit == null || nit.isBlank()) {
-            throw new InvalidNitException("El NIT es obligatorio");
+            throw new InvalidNitException("NIT es obligatorio");
         }
         if (!nit.matches("\\d{9}-\\d")) {
-            throw new InvalidNitException("El NIT debe tener el formato XXXXXXXXX-X");
+            throw new InvalidNitException("NIT debe tener formato XXXXXXXXX-X");
         }
         
-        // Validar dígito de verificación (Algoritmo NIT colombiano)
-        String number = nit.substring(0, 9);
-        char expectedDv = calculateNitDv(number);
-        char inputDv = nit.charAt(10);
+        // Validar dígito verificador
+        String numero = nit.substring(0, 9);
+        char dvEsperado = calcularDVNIT(numero);
+        char dvIngresado = nit.charAt(10);
         
-        if (expectedDv != inputDv) {
-            throw new InvalidNitException("Dígito de verificación del NIT incorrecto");
+        if (dvEsperado != dvIngresado) {
+            throw new InvalidNitException("Dígito verificador de NIT inválido");
         }
         
-        this.nit = nit;
+        this.NIT = nit;
     }
-
-    private char calculateNitDv(String nitStr) {
-        int[] weights = {71, 67, 59, 53, 47, 43, 41, 37, 29};
-        int sum = 0;
+    
+    private char calcularDVNIT(String nit) {
+        int[] pesos = {71, 67, 59, 53, 47, 43, 41, 37, 29};
+        int suma = 0;
         for (int i = 0; i < 9; i++) {
-            sum += Character.getNumericValue(nitStr.charAt(i)) * weights[i];
+            suma += Character.getNumericValue(nit.charAt(i)) * pesos[i];
         }
-        int remainder = sum % 11;
-        int dv = (remainder > 1) ? (11 - remainder) : remainder;
+        int residuo = suma % 11;
+        int dv = (residuo > 1) ? (11 - residuo) : residuo;
         return (dv == 10) ? '0' : Character.forDigit(dv, 10);
     }
 }

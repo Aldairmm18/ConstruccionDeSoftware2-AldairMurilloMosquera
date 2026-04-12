@@ -1,44 +1,94 @@
 package app.application.usecases;
 
-import app.domain.models.PersonClient;
-import app.domain.models.CorporateClient;
-import app.domain.ports.ClientPort;
-import app.domain.services.ClientDomainService;
+import app.domain.Exceptions.BusinessException;
+import app.domain.Exceptions.DuplicateIdentificationException;
+import app.domain.Exceptions.InvalidEmailException;
+import app.domain.models.*;
+import app.domain.ports.ClientRepository;
+import app.domain.ports.OperationsLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
 
-    private final ClientPort clientPort;
-    private final ClientDomainService clientDomainService;
+    private final ClientRepository clientRepository;
+    private final OperationsLogRepository operationsLogRepository;
 
     @Override
     @Transactional
-    public PersonClient createNaturalClient(PersonClient client) {
-        clientDomainService.validateClientCreation(client);
-        return clientPort.save(client);
+    public PersonClient registerNaturalPerson(PersonClient client) {
+        if (clientRepository.existsByIdentification(client.getIdentification())) {
+            throw new DuplicateIdentificationException("Document already registered: " + client.getIdentification());
+        }
+        if (clientRepository.existsByEmail(client.getEmail())) {
+            throw new InvalidEmailException("Email already registered: " + client.getEmail());
+        }
+
+        PersonClient saved = clientRepository.save(client);
+        registerLog("NATURAL_PERSON_REGISTERED", saved.getId());
+        return saved;
     }
 
     @Override
     @Transactional
-    public CorporateClient createCorporateClient(CorporateClient client) {
-        clientDomainService.validateCorporateClient(client);
-        // TODO: crear un CorporateClientPort dedicado para evitar este cast inseguro.
-        return (CorporateClient) (Object) clientPort.save((PersonClient) (Object) client);
+    public CorporateClient registerCorporateCompany(CorporateClient company) {
+        if (clientRepository.existsByIdentification(company.getIdentification())) {
+            throw new DuplicateIdentificationException("NIT already registered: " + company.getIdentification());
+        }
+        if (clientRepository.existsByEmail(company.getEmail())) {
+            throw new InvalidEmailException("Email already registered: " + company.getEmail());
+        }
+
+        CorporateClient saved = clientRepository.save(company);
+        registerLog("CORPORATE_CLIENT_REGISTERED", saved.getId());
+        return saved;
     }
 
     @Override
-    public PersonClient findById(Long id) {
-        return clientPort.findById(id);
+    @Transactional
+    public Client updateContactInfo(String clientId, String address, String phone, String email) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new BusinessException("Client not found"));
+
+        if (!client.getEmail().equals(email) && clientRepository.existsByEmail(email)) {
+            throw new InvalidEmailException("Email already taken: " + email);
+        }
+
+        client.setAddress(address);
+        client.setPhone(phone);
+        client.setEmail(email);
+
+        Client updated = clientRepository.save(client);
+        registerLog("CLIENT_CONTACT_UPDATED", clientId);
+        return updated;
     }
 
     @Override
-    public List<PersonClient> findAll() {
-        return clientPort.findAll();
+    public Optional<Client> findByIdentification(String doc) {
+        return clientRepository.findByIdentification(doc);
+    }
+
+    @Override
+    public List<Client> findAll() {
+        return (List<Client>) (Object) clientRepository.findAll();
+    }
+
+    private void registerLog(String operation, String clientId) {
+        OperationsLog log = new OperationsLog();
+        log.setId(UUID.randomUUID().toString());
+        log.setTimestamp(LocalDateTime.now());
+        log.setOperation(operation);
+        
+        Map<String, String> details = new HashMap<>();
+        details.put("clientId", clientId);
+        log.setDetails(details);
+        
+        operationsLogRepository.save(log);
     }
 }

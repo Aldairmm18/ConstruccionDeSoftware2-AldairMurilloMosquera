@@ -1,14 +1,13 @@
 package app.interfaces.controllers;
 
 import app.application.usecases.TransferManagementUseCase;
-import app.domain.models.BankAccount;
 import app.domain.models.Transfer;
-import app.interfaces.controllers.requests.TransferRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -20,51 +19,44 @@ public class TransferController {
 
     private final TransferManagementUseCase transferManagementUseCase;
 
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody TransferRequest request) {
+    @PostMapping("/request")
+    public ResponseEntity<?> request(@RequestBody Map<String, Object> payload) {
         try {
-            // El use case resuelve cuentas reales y valida reglas
-            BankAccount source = new BankAccount();
-            source.setAccountNumber(request.getSourceAccountNumber());
-
-            BankAccount target = new BankAccount();
-            target.setAccountNumber(request.getTargetAccountNumber());
-
-            Transfer transfer = new Transfer();
-            transfer.setSourceAccount(source);
-            transfer.setTargetAccount(target);
-            transfer.setAmount(request.getAmount());
-
-            Transfer created = transferManagementUseCase.createTransfer(transfer);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+            String source = (String) payload.get("sourceAccountNumber");
+            String target = (String) payload.get("targetAccountNumber");
+            BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(transferManagementUseCase.requestTransfer(source, target, amount));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<?> approve(
-            @PathVariable Long id,
-            @RequestParam Long userId) {
+    public ResponseEntity<?> approve(@PathVariable String id, @RequestParam String auditorId) {
         try {
-            Transfer approved = transferManagementUseCase.approveTransfer(id, userId);
-            return ResponseEntity.ok(approved);
+            return ResponseEntity.ok(transferManagementUseCase.approveTransfer(id, auditorId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> reject(@PathVariable String id, @RequestParam String reason) {
+        try {
+            return ResponseEntity.ok(transferManagementUseCase.rejectTransfer(id, reason));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<Transfer>> findPending() {
+        return ResponseEntity.ok(transferManagementUseCase.findPendingTransfers());
+    }
+
     @GetMapping
     public ResponseEntity<List<Transfer>> findAll() {
         return ResponseEntity.ok(transferManagementUseCase.findAll());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
-        Transfer t = transferManagementUseCase.getTransferById(id);
-        if (t == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(t);
     }
 }

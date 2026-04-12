@@ -1,31 +1,44 @@
 package app.domain.models;
 
-import java.time.LocalDate;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import app.domain.Exceptions.InvalidNationalIdException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-/**
- * CORRECCIÓN 1: PersonClient ahora hereda de Client.
- */
-@Getter
-@Setter
+import jakarta.persistence.*;
+import java.time.LocalDate;
+
+@Entity
+@Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class PersonClient extends Client {
-
-  private LocalDate birthDate;
-
-  @Override
-  public void setDocument(String document) {
-      if (document == null || document.isBlank()) {
-          throw new InvalidNationalIdException("La cédula es obligatoria");
-      }
-      if (!document.matches("\\d{7,10}")) {
-          throw new InvalidNationalIdException("La cédula debe tener entre 7 y 10 dígitos");
-      }
-      super.setDocument(document);
-  }
+    
+    @Column(nullable = false)
+    private String lastName;
+    
+    @Column(nullable = false)
+    private LocalDate birthDate;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "account_id")
+    private BankAccount account;
+    
+    // VALIDACIÓN: Cédula colombiana
+    @Override
+    public void setIdentification(String identification) {
+        if (identification == null || identification.isBlank()) {
+            throw new InvalidNationalIdException("Cédula es obligatoria");
+        }
+        if (!identification.matches("\\d{7,10}")) {
+            throw new InvalidNationalIdException("Cédula debe tener entre 7 y 10 dígitos");
+        }
+        super.setIdentification(identification);
+    }
 }

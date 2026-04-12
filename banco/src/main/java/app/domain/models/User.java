@@ -16,10 +16,10 @@ public class User extends Person {
 
     private LocalDate birthDate;
     private String username;
-    
+
     @JsonIgnore
     private String passwordHash;
-    
+
     private SystemRole systemRole;
     private UserStatus userStatus;
 

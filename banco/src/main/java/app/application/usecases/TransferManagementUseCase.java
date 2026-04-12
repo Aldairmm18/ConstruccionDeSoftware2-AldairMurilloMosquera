@@ -1,20 +1,15 @@
 package app.application.usecases;
 
 import app.domain.models.Transfer;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransferManagementUseCase {
-    Transfer createTransfer(Transfer transfer);
-
-    /**
-     * Firma del metodo para aprobacion de transferencias.
-     * @param transferId ID de la transferencia a aprobar.
-     * @param userId ID del usuario que aprueba (para auditoria).
-     * @return Transferencia aprobada.
-     */
-    Transfer approveTransfer(Long transferId, Long userId);
-
-    Transfer getTransferById(Long id);
-
+    Transfer requestTransfer(String sourceAccountNumber, String targetAccountNumber, BigDecimal amount);
+    Transfer approveTransfer(String transferId, String auditorId);
+    Transfer rejectTransfer(String transferId, String reason);
+    List<Transfer> findPendingTransfers();
+    Optional<Transfer> findById(String id);
     List<Transfer> findAll();
 }

@@ -1,167 +1,140 @@
 package app.application.usecases;
 
-import app.domain.Exceptions.BusinessException;
-import app.domain.Exceptions.InvalidAmountException;
-import app.domain.Exceptions.LoanRejectedException;
-import app.domain.models.BankAccount;
-import app.domain.models.Loan;
-import app.domain.models.LoanStatus;
-import app.domain.models.OperationsLog;
-import app.domain.models.User;
-import app.domain.ports.BankAccountPort;
-import app.domain.ports.LoanPort;
-import app.domain.ports.OperationsLogPort;
-import app.domain.ports.UserPort;
-import app.domain.services.LoanDomainService;
+import app.domain.Exceptions.*;
+import app.domain.models.*;
+import app.domain.ports.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
 
-    private final LoanPort loanPort;
-    private final BankAccountPort bankAccountPort;
-    private final LoanDomainService loanDomainService;
-    private final OperationsLogPort operationsLogPort;
-    private final UserPort userPort;
-    private final TransactionManagementUseCase transactionManagementUseCase;
+    private final LoanRepository loanRepository;
+    private final ClientRepository clientRepository;
+    private final BankAccountRepository bankAccountRepository;
+    private final OperationsLogRepository operationsLogRepository;
 
     @Override
     @Transactional
-    public Loan requestLoan(Loan loan) {
-        if (loan.getClient() == null || loan.getClient().getId() == null) {
-            throw new BusinessException("Datos del cliente incompletos");
-        }
+    public Loan requestLoan(String clientId, BigDecimal amount, BigDecimal interestRate, int termMonths, String disbursementAccountId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new BusinessException("Client not found"));
 
-        long activeAccounts = bankAccountPort.countByClientId(loan.getClient().getId());
+        // RULE: At least 2 active accounts
+        long activeAccounts = bankAccountRepository.countByClientId(clientId);
         if (activeAccounts < 2) {
-            throw new LoanRejectedException(
-                String.format("Debe tener al menos 2 cuentas activas para solicitar un prestamo. Tiene: %d", activeAccounts));
+            throw new LoanRejectedException("Client must have at least 2 active accounts to request a loan.");
         }
 
-        if (loan.getRequestedAmount() == null || loan.getRequestedAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("El monto del prestamo debe ser mayor a 0");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Loan amount must be greater than 0");
         }
 
-        if (loan.getDisbursementTargetAccount() == null
-            || loan.getDisbursementTargetAccount().getAccountNumber() == null) {
-            throw new BusinessException("Cuenta de desembolso no encontrada");
+        BankAccount disbursementAccount = bankAccountRepository.findById(disbursementAccountId)
+                .orElseThrow(() -> new BusinessException("Disbursement account not found"));
+
+        if (!disbursementAccount.getClient().getId().equals(clientId)) {
+            throw new BusinessException("Disbursement account must belong to the client");
         }
 
-        BankAccount disbursementAccount = bankAccountPort.findByAccountNumber(
-            loan.getDisbursementTargetAccount().getAccountNumber());
-        if (disbursementAccount == null) {
-            throw new BusinessException("Cuenta de desembolso no encontrada");
-        }
+        Loan loan = new Loan();
+        loan.setId(UUID.randomUUID().toString());
+        loan.setClient(client);
+        loan.setAmount(amount);
+        loan.setInterestRate(interestRate);
+        loan.setTermMonths(termMonths);
+        loan.setRequestDate(LocalDateTime.now());
+        loan.setStatus(LoanStatus.PENDING);
+        loan.setDisbursementAccount(disbursementAccount);
 
-        if (disbursementAccount.getClient() == null
-            || disbursementAccount.getClient().getId() == null
-            || !disbursementAccount.getClient().getId().equals(loan.getClient().getId())) {
-            throw new BusinessException("La cuenta de desembolso debe pertenecer al cliente");
-        }
-
-        // Validaciones de dominio sobre el prestamo
-        loanDomainService.validateLoanCreation(loan);
-        loan.setLoanStatus(LoanStatus.UNDER_REVIEW);
-
-        Loan saved = loanPort.save(loan);
-        recordLog("PRESTAMO_SOLICITADO", disbursementAccount, saved, null);
-
+        Loan saved = loanRepository.save(loan);
+        registerLog("LOAN_REQUESTED", saved.getId());
         return saved;
     }
 
     @Override
     @Transactional
-    public Loan approveLoan(Long loanId, Long userId) {
-        Loan loan = loanPort.findById(loanId);
-        if (loan == null) {
-            throw new BusinessException("Prestamo no encontrado");
+    public Loan approveLoan(String loanId, String adminId) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new BusinessException("Loan not found"));
+
+        if (loan.getStatus() != LoanStatus.PENDING) {
+            throw new BusinessException("Loan is not in PENDING state");
         }
 
-        if (loan.getLoanStatus() != LoanStatus.UNDER_REVIEW) {
-            throw new BusinessException("Solo se pueden aprobar prestamos EN REVISION");
-        }
-
-        loan.setLoanStatus(LoanStatus.APPROVED);
-        Loan saved = loanPort.save(loan);
-
-        User user = userPort.findById(userId);
-        recordLog("PRESTAMO_APROBADO", loan.getDisbursementTargetAccount(), saved, user);
-
-        return saved;
-    }
-
-    @Override
-    @Transactional
-    public Loan disburseLoan(Long loanId) {
-        Loan loan = loanPort.findById(loanId);
-        if (loan == null) {
-            throw new BusinessException("Prestamo no encontrado");
-        }
-
-        if (loan.getLoanStatus() != LoanStatus.APPROVED) {
-            throw new BusinessException("Solo se pueden desembolsar prestamos APROBADOS");
-        }
-
-        // Se reutiliza el use case de transacciones para el desembolso
-        transactionManagementUseCase.deposit(
-            loan.getDisbursementTargetAccount().getAccountNumber(),
-            loan.getRequestedAmount()
-        );
-
-        loan.setLoanStatus(LoanStatus.DISBURSED);
-        loan.setDisbursementDate(LocalDate.now());
-
-        Loan updated = loanPort.save(loan);
-        recordLog("PRESTAMO_DESEMBOLSADO", loan.getDisbursementTargetAccount(), updated, null);
-
+        loan.setStatus(LoanStatus.APPROVED);
+        Loan updated = loanRepository.save(loan);
+        registerLog("LOAN_APPROVED", updated.getId());
         return updated;
     }
 
     @Override
-    public List<Loan> findAll() {
-        return loanPort.findAll();
-    }
+    @Transactional
+    public Loan rejectLoan(String loanId, String reason) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new BusinessException("Loan not found"));
 
-    @Override
-    public Loan findById(Long id) {
-        return loanPort.findById(id);
-    }
-
-    @Override
-    public List<Loan> findByClientId(Long clientId) {
-        // El puerto expone findByRequestingClientId
-        return loanPort.findByRequestingClientId(clientId);
-    }
-
-    // Registro de bitacora con referencias a entidades reales
-    private void recordLog(String operation, BankAccount account, Loan l, User user) {
-        OperationsLog log = new OperationsLog();
-        log.setLogId(UUID.randomUUID().toString());
-        log.setOperationDateTime(LocalDateTime.now());
-        log.setOperationType(operation);
-        log.setAffectedProduct(account);
-        log.setUser(user);
-
-        Map<String, Object> details = new HashMap<>();
-        details.put("loanId", l.getId());
-        if (l.getClient() != null) {
-            details.put("clientId", l.getClient().getId());
+        if (loan.getStatus() != LoanStatus.PENDING) {
+            throw new BusinessException("Loan is not in PENDING state");
         }
-        details.put("amount", l.getRequestedAmount());
-        details.put("status", l.getLoanStatus().toString());
-        log.setDetailData(details);
 
-        operationsLogPort.save(log);
+        loan.setStatus(LoanStatus.REJECTED);
+        Loan updated = loanRepository.save(loan);
+        registerLog("LOAN_REJECTED", updated.getId());
+        return updated;
+    }
+
+    @Override
+    @Transactional
+    public Loan disburseLoan(String loanId) {
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new BusinessException("Loan not found"));
+
+        if (loan.getStatus() != LoanStatus.APPROVED) {
+            throw new BusinessException("Loan is not APPROVED for disbursement");
+        }
+
+        BankAccount account = loan.getDisbursementAccount();
+        account.credit(loan.getAmount());
+        bankAccountRepository.save(account);
+
+        loan.setStatus(LoanStatus.DISBURSED);
+        Loan updated = loanRepository.save(loan);
+        registerLog("LOAN_DISBURSED", updated.getId());
+        return updated;
+    }
+
+    @Override
+    public List<Loan> findLoansByClient(String clientId) {
+        return loanRepository.findByClientId(clientId);
+    }
+
+    @Override
+    public Optional<Loan> findById(String id) {
+        return loanRepository.findById(id);
+    }
+
+    @Override
+    public List<Loan> findAll() {
+        return loanRepository.findAll();
+    }
+
+    private void registerLog(String operation, String loanId) {
+        OperationsLog log = new OperationsLog();
+        log.setId(UUID.randomUUID().toString());
+        log.setTimestamp(LocalDateTime.now());
+        log.setOperation(operation);
+        
+        Map<String, String> details = new HashMap<>();
+        details.put("loanId", loanId);
+        log.setDetails(details);
+        
+        operationsLogRepository.save(log);
     }
 }

@@ -2,11 +2,15 @@ package app.interfaces.controllers;
 
 import app.application.usecases.AccountManagementUseCase;
 import app.domain.models.BankAccount;
+import app.domain.models.TipoCuenta;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -16,15 +20,37 @@ public class BankAccountController {
 
     private final AccountManagementUseCase accountManagementUseCase;
 
-    @PostMapping
-    public ResponseEntity<BankAccount> create(@RequestBody BankAccount account) {
-        return ResponseEntity.ok(accountManagementUseCase.createAccount(account));
+    @PostMapping("/savings")
+    public ResponseEntity<?> openSavings(@RequestBody Map<String, Object> payload) {
+        try {
+            String clientId = (String) payload.get("clientId");
+            BigDecimal initialDeposit = new BigDecimal(payload.get("initialDeposit").toString());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(accountManagementUseCase.openSavingsAccount(clientId, initialDeposit));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @PostMapping("/{id}/block")
-    public ResponseEntity<BankAccount> block(@PathVariable Long id) {
-        // La orquestacion vive en el use case
-        return ResponseEntity.ok(accountManagementUseCase.blockAccount(id));
+    @PostMapping("/checking")
+    public ResponseEntity<?> openChecking(@RequestBody Map<String, Object> payload) {
+        try {
+            String clientId = (String) payload.get("clientId");
+            BigDecimal initialDeposit = new BigDecimal(payload.get("initialDeposit").toString());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(accountManagementUseCase.openCheckingAccount(clientId, initialDeposit));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{number}/balance")
+    public ResponseEntity<?> getBalance(@PathVariable String number) {
+        try {
+            return ResponseEntity.ok(Map.of("balance", accountManagementUseCase.getBalance(number)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping
@@ -32,12 +58,8 @@ public class BankAccountController {
         return ResponseEntity.ok(accountManagementUseCase.findAll());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
-        BankAccount account = accountManagementUseCase.findById(id);
-        if (account == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(account);
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<List<BankAccount>> findByClient(@PathVariable String clientId) {
+        return ResponseEntity.ok(accountManagementUseCase.findByClientId(clientId));
     }
 }

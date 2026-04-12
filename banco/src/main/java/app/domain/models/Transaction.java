@@ -12,32 +12,25 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Loan {
+public class Transaction {
     
     @Id
     private String id;
     
     @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    @JoinColumn(name = "account_id", nullable = false)
+    private BankAccount account;
     
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
     
-    @Column(nullable = false, precision = 5, scale = 2)
-    private BigDecimal interestRate;
-    
-    @Column(nullable = false)
-    private int termMonths;
-    
-    @Column(nullable = false)
-    private LocalDateTime requestDate;
-    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LoanStatus status;
+    private TransactionType transactionType;
     
-    @ManyToOne
-    @JoinColumn(name = "disbursement_account_id", nullable = false)
-    private BankAccount disbursementAccount;
+    @Column(nullable = false)
+    private LocalDateTime date;
+    
+    @Column(nullable = false)
+    private String description;
 }
