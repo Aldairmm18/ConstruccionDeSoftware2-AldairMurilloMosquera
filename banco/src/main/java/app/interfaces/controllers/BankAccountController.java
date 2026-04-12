@@ -2,7 +2,7 @@ package app.interfaces.controllers;
 
 import app.application.usecases.AccountManagementUseCase;
 import app.domain.models.BankAccount;
-import app.domain.models.TipoCuenta;
+import app.domain.models.AccountType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

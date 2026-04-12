@@ -16,105 +16,124 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TransferManagementUseCaseImpl implements TransferManagementUseCase {
 
-    private final TransferRepository transferRepository;
-    private final BankAccountRepository bankAccountRepository;
-    private final OperationsLogRepository operationsLogRepository;
+    private final TransferPort transferPort;
+    private final BankAccountPort bankAccountPort;
+    private final OperationsLogPort operationsLogPort;
+
+    private static final BigDecimal HIGH_VALUE_THRESHOLD = new BigDecimal("10000000");
 
     @Override
     @Transactional
     public Transfer requestTransfer(String sourceAccountNumber, String targetAccountNumber, BigDecimal amount) {
         validateAmount(amount);
-        BankAccount source = bankAccountRepository.findByAccountNumber(sourceAccountNumber)
-                .orElseThrow(() -> new BusinessException("Source account not found"));
-        BankAccount target = bankAccountRepository.findByAccountNumber(targetAccountNumber)
-                .orElseThrow(() -> new BusinessException("Target account not found"));
+        BankAccount source = bankAccountPort.findByAccountNumber(sourceAccountNumber);
+        if (source == null) {
+            throw new BusinessException("Source account not found");
+        }
+        BankAccount target = bankAccountPort.findByAccountNumber(targetAccountNumber);
+        if (target == null) {
+            throw new BusinessException("Target account not found");
+        }
 
-        if (source.getId().equals(target.getId())) {
+        if (source.getId() != null && source.getId().equals(target.getId())) {
             throw new BusinessException("Source and target must be different");
         }
 
-        if (source.getBalance().compareTo(amount) < 0) {
+        if (source.getCurrentBalance().compareTo(amount) < 0) {
             throw new InsufficientFundsException("Insufficient funds for transfer");
         }
 
         Transfer t = new Transfer(source, target, amount);
-        t.setId(UUID.randomUUID().toString());
-        Transfer saved = transferRepository.save(t);
-        registerLog("TRANSFER_REQUESTED", saved.getId());
+        t.setId(null);
+
+        // HIGH VALUE LOGIC: if amount > threshold AND source account has CORPORATE client
+        if (amount.compareTo(HIGH_VALUE_THRESHOLD) > 0
+                && source.getClient() instanceof CorporateClient) {
+            t.setTransferStatus(TransferStatus.AWAITING_APPROVAL);
+        }
+
+        Transfer saved = transferPort.save(t);
+        registerLog("TRANSFER_REQUESTED", saved.getId() != null ? saved.getId().toString() : null);
         return saved;
     }
 
     @Override
     @Transactional
     public Transfer approveTransfer(String transferId, String auditorId) {
-        Transfer t = transferRepository.findById(transferId)
-                .orElseThrow(() -> new BusinessException("Transfer not found"));
+        Transfer t = transferPort.findById(Long.parseLong(transferId));
+        if (t == null) {
+            throw new BusinessException("Transfer not found");
+        }
 
         if (t.isExpired()) {
-            t.setStatus(TransferStatus.EXPIRED);
-            transferRepository.save(t);
+            t.setTransferStatus(TransferStatus.EXPIRED);
+            transferPort.save(t);
             throw new TransferExpiredException("Transfer has expired");
         }
 
-        if (t.getStatus() != TransferStatus.PENDING) {
-            throw new BusinessException("Transfer is not in PENDING state");
+        TransferStatus status = t.getTransferStatus();
+        if (status != TransferStatus.PENDING && status != TransferStatus.AWAITING_APPROVAL) {
+            throw new BusinessException("Transfer is not in PENDING or AWAITING_APPROVAL state");
         }
 
-        BankAccount source = t.getOriginAccount();
-        BankAccount target = t.getDestinationAccount();
+        BankAccount source = t.getSourceAccount();
+        BankAccount target = t.getTargetAccount();
 
         source.debit(t.getAmount());
         target.credit(t.getAmount());
 
-        bankAccountRepository.save(source);
-        bankAccountRepository.save(target);
+        bankAccountPort.save(source);
+        bankAccountPort.save(target);
 
-        t.setStatus(TransferStatus.APPROVED);
-        t.setDate(LocalDateTime.now());
-        
-        Transfer updated = transferRepository.save(t);
-        registerLog("TRANSFER_APPROVED", updated.getId());
+        t.setTransferStatus(TransferStatus.APPROVED);
+        t.setApprovalDate(LocalDateTime.now());
+
+        Transfer updated = transferPort.save(t);
+        registerLog("TRANSFER_APPROVED", updated.getId() != null ? updated.getId().toString() : null);
         return updated;
     }
 
     @Override
     @Transactional
     public Transfer rejectTransfer(String transferId, String reason) {
-        Transfer t = transferRepository.findById(transferId)
-                .orElseThrow(() -> new BusinessException("Transfer not found"));
-
-        if (t.getStatus() != TransferStatus.PENDING) {
-            throw new BusinessException("Transfer is not in PENDING state");
+        Transfer t = transferPort.findById(Long.parseLong(transferId));
+        if (t == null) {
+            throw new BusinessException("Transfer not found");
         }
 
-        t.setStatus(TransferStatus.REJECTED);
-        Transfer updated = transferRepository.save(t);
-        registerLog("TRANSFER_REJECTED", updated.getId());
+        TransferStatus status = t.getTransferStatus();
+        if (status != TransferStatus.PENDING && status != TransferStatus.AWAITING_APPROVAL) {
+            throw new BusinessException("Transfer is not in PENDING or AWAITING_APPROVAL state");
+        }
+
+        t.setTransferStatus(TransferStatus.REJECTED);
+        Transfer updated = transferPort.save(t);
+        registerLog("TRANSFER_REJECTED", updated.getId() != null ? updated.getId().toString() : null);
         return updated;
     }
 
     @Override
     public List<Transfer> findPendingTransfers() {
-        return transferRepository.findByStatus(TransferStatus.PENDING);
+        return transferPort.findByTransferStatus(TransferStatus.PENDING);
     }
 
     @Override
     public Optional<Transfer> findById(String id) {
-        return transferRepository.findById(id);
+        return Optional.ofNullable(transferPort.findById(Long.parseLong(id)));
     }
 
     @Override
     public List<Transfer> findAll() {
-        return transferRepository.findAll();
+        return transferPort.findAll();
     }
 
     @Scheduled(fixedRate = 60000)
     public void expirePendingTransfers() {
-        List<Transfer> pending = transferRepository.findByStatus(TransferStatus.PENDING);
+        List<Transfer> pending = transferPort.findByTransferStatus(TransferStatus.PENDING);
         for (Transfer t : pending) {
             if (t.isExpired()) {
-                t.setStatus(TransferStatus.EXPIRED);
-                transferRepository.save(t);
+                t.setTransferStatus(TransferStatus.EXPIRED);
+                transferPort.save(t);
             }
         }
     }
@@ -127,14 +146,14 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
 
     private void registerLog(String operation, String transferId) {
         OperationsLog log = new OperationsLog();
-        log.setId(UUID.randomUUID().toString());
-        log.setTimestamp(LocalDateTime.now());
-        log.setOperation(operation);
-        
-        Map<String, String> details = new HashMap<>();
+        log.setLogId(UUID.randomUUID().toString());
+        log.setOperationType(operation);
+        log.setOperationDateTime(LocalDateTime.now());
+
+        Map<String, Object> details = new HashMap<>();
         details.put("transferId", transferId);
-        log.setDetails(details);
-        
-        operationsLogRepository.save(log);
+        log.setDetailData(details);
+
+        operationsLogPort.save(log);
     }
 }

@@ -55,4 +55,12 @@ public class TransferPersistenceAdapter implements TransferPort {
   public List<Transfer> findByTransferStatusAndCreationDateBefore(app.domain.models.TransferStatus status, java.time.LocalDateTime dateTime) {
     return transferRepository.findByTransferStatusAndCreationDateBefore(status, dateTime).stream().map(TransferEntity::toDomain).collect(Collectors.toList());
   }
+
+  @Override
+  public List<Transfer> findPendingApprovalOlderThanMinutes(int minutes) {
+    java.time.LocalDateTime threshold = java.time.LocalDateTime.now().minusMinutes(minutes);
+    return transferRepository.findByTransferStatusAndCreationDateBefore(
+        app.domain.models.TransferStatus.AWAITING_APPROVAL, threshold)
+        .stream().map(TransferEntity::toDomain).collect(Collectors.toList());
+  }
 }

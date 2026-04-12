@@ -16,30 +16,32 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TransactionManagementUseCaseImpl implements TransactionManagementUseCase {
 
-    private final TransactionRepository transactionRepository;
-    private final BankAccountRepository bankAccountRepository;
-    private final OperationsLogRepository operationsLogRepository;
+    private final TransactionPort transactionPort;
+    private final BankAccountPort bankAccountPort;
+    private final OperationsLogPort operationsLogPort;
 
     @Override
     @Transactional
     public Transaction makeDeposit(String accountNumber, BigDecimal amount, String description) {
         validateAmount(amount);
-        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new BusinessException("Account not found"));
+        BankAccount account = bankAccountPort.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new BusinessException("Account not found");
+        }
 
         account.credit(amount);
-        bankAccountRepository.save(account);
+        bankAccountPort.save(account);
 
         Transaction t = new Transaction();
-        t.setId(UUID.randomUUID().toString());
+        t.setId(null);
         t.setAccount(account);
         t.setAmount(amount);
         t.setTransactionType(TransactionType.DEPOSIT);
         t.setDate(LocalDateTime.now());
         t.setDescription(description != null ? description : "Deposit");
 
-        Transaction saved = transactionRepository.save(t);
-        registerLog("DEPOSIT", saved.getId());
+        Transaction saved = transactionPort.save(t);
+        registerLog("DEPOSIT", saved.getId() != null ? saved.getId().toString() : null);
         return saved;
     }
 
@@ -47,22 +49,24 @@ public class TransactionManagementUseCaseImpl implements TransactionManagementUs
     @Transactional
     public Transaction makeWithdrawal(String accountNumber, BigDecimal amount, String description) {
         validateAmount(amount);
-        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new BusinessException("Account not found"));
+        BankAccount account = bankAccountPort.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new BusinessException("Account not found");
+        }
 
         account.debit(amount);
-        bankAccountRepository.save(account);
+        bankAccountPort.save(account);
 
         Transaction t = new Transaction();
-        t.setId(UUID.randomUUID().toString());
+        t.setId(null);
         t.setAccount(account);
         t.setAmount(amount);
         t.setTransactionType(TransactionType.WITHDRAWAL);
         t.setDate(LocalDateTime.now());
         t.setDescription(description != null ? description : "Withdrawal");
 
-        Transaction saved = transactionRepository.save(t);
-        registerLog("WITHDRAWAL", saved.getId());
+        Transaction saved = transactionPort.save(t);
+        registerLog("WITHDRAWAL", saved.getId() != null ? saved.getId().toString() : null);
         return saved;
     }
 
@@ -70,30 +74,34 @@ public class TransactionManagementUseCaseImpl implements TransactionManagementUs
     @Transactional
     public Transaction payService(String accountNumber, String serviceName, String reference, BigDecimal amount) {
         validateAmount(amount);
-        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new BusinessException("Account not found"));
+        BankAccount account = bankAccountPort.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new BusinessException("Account not found");
+        }
 
         account.debit(amount);
-        bankAccountRepository.save(account);
+        bankAccountPort.save(account);
 
         Transaction t = new Transaction();
-        t.setId(UUID.randomUUID().toString());
+        t.setId(null);
         t.setAccount(account);
         t.setAmount(amount);
         t.setTransactionType(TransactionType.SERVICE_PAYMENT);
         t.setDate(LocalDateTime.now());
         t.setDescription(String.format("Payment %s - Ref: %s", serviceName, reference));
 
-        Transaction saved = transactionRepository.save(t);
-        registerLog("SERVICE_PAYMENT", saved.getId());
+        Transaction saved = transactionPort.save(t);
+        registerLog("SERVICE_PAYMENT", saved.getId() != null ? saved.getId().toString() : null);
         return saved;
     }
 
     @Override
     public List<Transaction> getTransactionsByAccount(String accountNumber) {
-        BankAccount account = bankAccountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new BusinessException("Account not found"));
-        return transactionRepository.findByAccountId(account.getId());
+        BankAccount account = bankAccountPort.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new BusinessException("Account not found");
+        }
+        return transactionPort.findByAccountId(account.getId());
     }
 
     private void validateAmount(BigDecimal amount) {
@@ -104,14 +112,14 @@ public class TransactionManagementUseCaseImpl implements TransactionManagementUs
 
     private void registerLog(String operation, String transactionId) {
         OperationsLog log = new OperationsLog();
-        log.setId(UUID.randomUUID().toString());
-        log.setTimestamp(LocalDateTime.now());
-        log.setOperation(operation);
-        
-        Map<String, String> details = new HashMap<>();
+        log.setLogId(UUID.randomUUID().toString());
+        log.setOperationType(operation);
+        log.setOperationDateTime(LocalDateTime.now());
+
+        Map<String, Object> details = new HashMap<>();
         details.put("transactionId", transactionId);
-        log.setDetails(details);
-        
-        operationsLogRepository.save(log);
+        log.setDetailData(details);
+
+        operationsLogPort.save(log);
     }
 }
