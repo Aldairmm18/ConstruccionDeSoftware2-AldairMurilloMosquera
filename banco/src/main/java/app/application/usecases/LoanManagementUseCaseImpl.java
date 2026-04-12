@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+// TODO: Delegate business logic to domain services instead of implementing directly here
+
 @Service
 @RequiredArgsConstructor
 public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
@@ -55,7 +57,7 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
         loan.setRequestedAmount(amount);
         loan.setInterestRate(interestRate != null ? interestRate.doubleValue() : null);
         loan.setTermMonths(termMonths);
-        loan.setLoanStatus(LoanStatus.PENDING);
+        loan.setLoanStatus(LoanStatus.UNDER_REVIEW);
         loan.setDisbursementTargetAccount(disbursementAccount);
 
         Loan saved = loanPort.save(loan);
@@ -71,8 +73,8 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
             throw new BusinessException("Loan not found");
         }
 
-        if (loan.getLoanStatus() != LoanStatus.PENDING) {
-            throw new BusinessException("Loan is not in PENDING state");
+        if (loan.getLoanStatus() != LoanStatus.UNDER_REVIEW) {
+            throw new BusinessException("Loan is not in UNDER_REVIEW state");
         }
 
         loan.setLoanStatus(LoanStatus.APPROVED);
@@ -90,8 +92,8 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
             throw new BusinessException("Loan not found");
         }
 
-        if (loan.getLoanStatus() != LoanStatus.PENDING) {
-            throw new BusinessException("Loan is not in PENDING state");
+        if (loan.getLoanStatus() != LoanStatus.UNDER_REVIEW) {
+            throw new BusinessException("Loan is not in UNDER_REVIEW state");
         }
 
         loan.setLoanStatus(LoanStatus.REJECTED);
