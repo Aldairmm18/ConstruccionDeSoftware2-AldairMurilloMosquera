@@ -1,6 +1,6 @@
 package app.interfaces.controllers;
 
-import app.domain.services.TransactionService;
+import app.application.usecases.TransactionManagementUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,23 +13,23 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class TransactionController {
-    
-    private final TransactionService transactionService;
-    
+
+    private final TransactionManagementUseCase transactionManagementUseCase;
+
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
         try {
-            transactionService.deposit(accountNumber, amount);
+            transactionManagementUseCase.deposit(accountNumber, amount);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdraw(@RequestParam String accountNumber, @RequestParam BigDecimal amount) {
         try {
-            transactionService.withdraw(accountNumber, amount);
+            transactionManagementUseCase.withdraw(accountNumber, amount);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

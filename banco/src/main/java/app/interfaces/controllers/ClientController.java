@@ -2,7 +2,6 @@ package app.interfaces.controllers;
 
 import app.application.usecases.ClientManagementUseCase;
 import app.domain.models.PersonClient;
-import app.domain.ports.ClientPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import java.util.List;
 public class ClientController {
 
   private final ClientManagementUseCase clientManagementUseCase;
-  private final ClientPort clientPort;
 
   @PostMapping
   public ResponseEntity<PersonClient> create(@RequestBody PersonClient client) {
@@ -27,7 +25,7 @@ public class ClientController {
 
   @GetMapping("/{id}")
   public ResponseEntity<PersonClient> findById(@PathVariable Long id) {
-    PersonClient client = clientPort.findById(id);
+    PersonClient client = clientManagementUseCase.findById(id);
     if (client == null) {
       return ResponseEntity.notFound().build();
     }
@@ -36,6 +34,6 @@ public class ClientController {
 
   @GetMapping
   public ResponseEntity<List<PersonClient>> findAll() {
-    return ResponseEntity.ok(clientPort.findAll());
+    return ResponseEntity.ok(clientManagementUseCase.findAll());
   }
 }

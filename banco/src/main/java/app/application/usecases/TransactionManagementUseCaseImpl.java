@@ -1,4 +1,4 @@
-package app.domain.services;
+package app.application.usecases;
 
 import app.domain.Exceptions.BusinessException;
 import app.domain.Exceptions.InvalidAmountException;
@@ -21,17 +21,21 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionService {
+public class TransactionManagementUseCaseImpl implements TransactionManagementUseCase {
 
     private final BankAccountPort bankAccountPort;
     private final OperationsLogPort operationsLogPort;
     private final TransferPort transferPort;
 
+    @Override
     @Transactional
     public void deposit(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
+
         BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) throw new BusinessException("Cuenta no encontrada");
+        if (account == null) {
+            throw new BusinessException("Cuenta no encontrada");
+        }
 
         BigDecimal oldBalance = account.getCurrentBalance();
         account.credit(amount);
@@ -41,11 +45,15 @@ public class TransactionService {
         recordLedger(null, account, amount);
     }
 
+    @Override
     @Transactional
     public void withdraw(String accountNumber, BigDecimal amount) {
         validateAmount(amount);
+
         BankAccount account = bankAccountPort.findByAccountNumberForUpdate(accountNumber);
-        if (account == null) throw new BusinessException("Cuenta no encontrada");
+        if (account == null) {
+            throw new BusinessException("Cuenta no encontrada");
+        }
 
         BigDecimal oldBalance = account.getCurrentBalance();
         account.debit(amount);
@@ -63,23 +71,21 @@ public class TransactionService {
             throw new InvalidAmountException("El monto debe ser mayor a 0");
         }
         if (amount.compareTo(new BigDecimal("999999999.99")) > 0) {
-            throw new InvalidAmountException("El monto excede el límite permitido");
+            throw new InvalidAmountException("El monto excede el limite permitido");
         }
         if (amount.scale() > 2) {
-            throw new InvalidAmountException("El monto no puede tener más de 2 decimales");
+            throw new InvalidAmountException("El monto no puede tener mas de 2 decimales");
         }
     }
 
-    // CORRECCIÓN 2: OperationsLog con referencias a entidades de dominio
+    // Registro de bitacora con referencias a entidades reales
     private void recordLog(String type, BankAccount account, BigDecimal amount, BigDecimal oldBalance) {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationDateTime(LocalDateTime.now());
         log.setOperationType(type);
-        
-        // Referencia real al producto afectado
         log.setAffectedProduct(account);
-        log.setUser(null); // No se provee usuario en estas operaciones por ahora
+        log.setUser(null);
 
         Map<String, Object> details = new HashMap<>();
         details.put("accountNumber", account.getAccountNumber());
@@ -96,7 +102,7 @@ public class TransactionService {
         record.setSourceAccount(source);
         record.setTargetAccount(target);
         record.setAmount(amount);
-        record.setTransferStatus(TransferStatus.COMPLETED); // Cambiado EXECUTED -> COMPLETED
+        record.setTransferStatus(TransferStatus.COMPLETED);
         record.setCreationDate(LocalDateTime.now());
         record.setApprovalDate(LocalDateTime.now());
         transferPort.save(record);

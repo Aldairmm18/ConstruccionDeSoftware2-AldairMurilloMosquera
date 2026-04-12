@@ -1,8 +1,7 @@
 package app.interfaces.controllers;
 
-import app.domain.models.BankAccount;
-import app.domain.ports.BankAccountPort;
 import app.application.usecases.AccountManagementUseCase;
+import app.domain.models.BankAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,24 +13,31 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class BankAccountController {
-    
+
     private final AccountManagementUseCase accountManagementUseCase;
-    private final BankAccountPort bankAccountPort;
-    
+
     @PostMapping
     public ResponseEntity<BankAccount> create(@RequestBody BankAccount account) {
         return ResponseEntity.ok(accountManagementUseCase.createAccount(account));
     }
-    
+
+    @PostMapping("/{id}/block")
+    public ResponseEntity<BankAccount> block(@PathVariable Long id) {
+        // La orquestacion vive en el use case
+        return ResponseEntity.ok(accountManagementUseCase.blockAccount(id));
+    }
+
     @GetMapping
     public ResponseEntity<List<BankAccount>> findAll() {
-        return ResponseEntity.ok(bankAccountPort.findAll());
+        return ResponseEntity.ok(accountManagementUseCase.findAll());
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
-        BankAccount account = bankAccountPort.findById(id);
-        if (account == null) return ResponseEntity.notFound().build();
+        BankAccount account = accountManagementUseCase.findById(id);
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(account);
     }
 }

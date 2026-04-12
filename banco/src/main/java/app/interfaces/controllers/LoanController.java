@@ -1,7 +1,7 @@
 package app.interfaces.controllers;
 
+import app.application.usecases.LoanManagementUseCase;
 import app.domain.models.Loan;
-import app.domain.services.LoanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,50 +15,52 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class LoanController {
-    
-    private final LoanService loanService;
-    
+
+    private final LoanManagementUseCase loanManagementUseCase;
+
     @PostMapping
     public ResponseEntity<?> request(@RequestBody Loan loan) {
         try {
-            Loan created = loanService.requestLoan(loan);
+            Loan created = loanManagementUseCase.requestLoan(loan);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approve(
             @PathVariable Long id,
             @RequestParam Long userId) {
         try {
-            Loan approved = loanService.approveLoan(id, userId);
+            Loan approved = loanManagementUseCase.approveLoan(id, userId);
             return ResponseEntity.ok(approved);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @PostMapping("/{id}/disburse")
     public ResponseEntity<?> disburse(@PathVariable Long id) {
         try {
-            Loan disbursed = loanService.disburseLoan(id);
+            Loan disbursed = loanManagementUseCase.disburseLoan(id);
             return ResponseEntity.ok(disbursed);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @GetMapping
     public ResponseEntity<List<Loan>> findAll() {
-        return ResponseEntity.ok(loanService.findAll());
+        return ResponseEntity.ok(loanManagementUseCase.findAll());
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
-        Loan loan = loanService.findById(id);
-        if (loan == null) return ResponseEntity.notFound().build();
+        Loan loan = loanManagementUseCase.findById(id);
+        if (loan == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(loan);
     }
 }
