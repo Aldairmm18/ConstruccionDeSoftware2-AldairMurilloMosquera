@@ -42,10 +42,14 @@ public class AccountService {
     }
 
     private BankAccount openAccount(Long clientId, AccountType type, BigDecimal initialDeposit) {
-        PersonClient client = clientPort.findById(clientId);
-        if (client == null) {
+        Client found = clientPort.findById(clientId);
+        if (found == null) {
             throw new UserNotFoundException("Cliente no encontrado: " + clientId);
         }
+        if (!(found instanceof PersonClient)) {
+            throw new BusinessException("Solo personas naturales pueden abrir cuentas bancarias");
+        }
+        PersonClient client = (PersonClient) found;
 
         validateInitialDeposit(initialDeposit);
 

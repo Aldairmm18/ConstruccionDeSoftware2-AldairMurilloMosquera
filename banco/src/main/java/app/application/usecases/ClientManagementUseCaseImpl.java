@@ -30,7 +30,7 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
             throw new InvalidEmailException("Email already registered: " + client.getEmail());
         }
 
-        PersonClient saved = clientPort.save(client);
+        PersonClient saved = (PersonClient) clientPort.save(client);
         registerLog("NATURAL_PERSON_REGISTERED", saved.getId() != null ? saved.getId().toString() : null);
         return saved;
     }
@@ -55,7 +55,7 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
     @Override
     @Transactional
     public Client updateContactInfo(String clientId, String address, String phone, String email) {
-        PersonClient client = clientPort.findById(Long.parseLong(clientId));
+        Client client = clientPort.findById(Long.parseLong(clientId));
         if (client == null) {
             throw new BusinessException("Client not found");
         }
@@ -68,7 +68,7 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
         client.setPhone(phone);
         client.setEmail(email);
 
-        PersonClient updated = clientPort.save(client);
+        Client updated = clientPort.save(client);
         registerLog("CLIENT_CONTACT_UPDATED", clientId);
         return updated;
     }
@@ -80,7 +80,7 @@ public class ClientManagementUseCaseImpl implements ClientManagementUseCase {
 
     @Override
     public List<Client> findAll() {
-        return (List<Client>) (Object) clientPort.findAll();
+        return clientPort.findAll();
     }
 
     private void registerLog(String operation, String clientId) {

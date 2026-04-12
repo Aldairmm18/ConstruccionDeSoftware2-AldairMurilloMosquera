@@ -42,7 +42,7 @@ public class LoanService {
             int termMonths,
             Long disbursementAccountId) {
 
-        PersonClient client = findClientOrThrow(clientId);
+        Client client = findClientOrThrow(clientId);
         validateMinimumAccounts(clientId);
         validateLoanAmount(amount);
 
@@ -144,8 +144,8 @@ public class LoanService {
 
     // ==================== VALIDATION METHODS ====================
 
-    private PersonClient findClientOrThrow(Long clientId) {
-        PersonClient client = clientPort.findById(clientId);
+    private Client findClientOrThrow(Long clientId) {
+        Client client = clientPort.findById(clientId);
         if (client == null) {
             throw new UserNotFoundException("Cliente no encontrado: " + clientId);
         }

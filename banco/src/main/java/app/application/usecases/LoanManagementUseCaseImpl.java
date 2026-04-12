@@ -24,7 +24,7 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
     @Override
     @Transactional
     public Loan requestLoan(String clientId, BigDecimal amount, BigDecimal interestRate, int termMonths, String disbursementAccountId) {
-        PersonClient client = clientPort.findById(Long.parseLong(clientId));
+        Client client = clientPort.findById(Long.parseLong(clientId));
         if (client == null) {
             throw new BusinessException("Client not found");
         }

@@ -6,6 +6,7 @@ import app.domain.ports.ClientPort;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service for CLIENT MANAGEMENT
@@ -49,10 +50,10 @@ public class ClientService {
         person.setEmail(email);
         person.setClientStatus(ClientStatus.ACTIVE);
 
-        PersonClient saved = clientPort.save(person);
+        Client saved = clientPort.save(person);
         auditService.logOperation("NATURAL_PERSON_REGISTERED", saved.getId() != null ? saved.getId().toString() : null);
 
-        return saved;
+        return (PersonClient) saved;
     }
 
     // ==================== UPDATE OPERATIONS ====================
@@ -76,31 +77,31 @@ public class ClientService {
         client.setPhone(newPhone);
         client.setEmail(newEmail);
 
-        PersonClient updated = clientPort.save(client);
+        Client updated = clientPort.save(client);
         auditService.logOperation("CLIENT_CONTACT_UPDATED", clientId.toString());
 
-        return updated;
+        return (PersonClient) updated;
     }
 
     // ==================== QUERY OPERATIONS ====================
 
     public PersonClient findByIdOrThrow(Long id) {
-        PersonClient client = clientPort.findById(id);
+        Client client = clientPort.findById(id);
         if (client == null) {
             throw new UserNotFoundException("Cliente no encontrado: " + id);
         }
-        return client;
+        return (PersonClient) client;
     }
 
-    public PersonClient findById(Long id) {
+    public Client findById(Long id) {
         return clientPort.findById(id);
     }
 
-    public PersonClient findByDocument(String document) {
+    public Client findByDocument(String document) {
         return clientPort.findByDocument(document);
     }
 
-    public List<PersonClient> findAll() {
+    public List<Client> findAll() {
         return clientPort.findAll();
     }
 
