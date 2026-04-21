@@ -1,0 +1,1156 @@
+{
+  "info": {
+    "_postman_id": "b2c4d6e8-f0a2-4c6e-8b0d-2f4a6c8e0b2d",
+    "name": "Hardened Banking System - JWT Flow",
+    "description": "Colección completa del sistema bancario con flujo JWT. Ejecutar en orden numérico. El Login Admin guarda el token automáticamente en la variable de entorno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",       "value": "http://localhost:8080", "type": "string" },
+    { "key": "token",         "value": "",                      "type": "string" },
+    { "key": "clientId1",     "value": "",                      "type": "string" },
+    { "key": "clientId2",     "value": "",                      "type": "string" },
+    { "key": "accountNumber1","value": "",                      "type": "string" },
+    { "key": "accountNumber2","value": "",                      "type": "string" },
+    { "key": "transferId",    "value": "",                      "type": "string" },
+    { "key": "loanId",        "value": "",                      "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "0. Setup - Auth",
+      "item": [
+        {
+          "name": "01 - Register Admin User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_banco\",\n  \"password\": \"Admin@2024!\",\n  \"name\": \"Administrador Principal\",\n  \"document\": \"12345678\",\n  \"email\": \"admin@bancohardened.com.co\",\n  \"phone\": \"3001234567\",\n  \"address\": \"Calle 50 # 45-30, El Poblado, Medellín\",\n  \"role\": \"INTERNAL_ANALYST\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "register"]
+            },
+            "description": "Crea el usuario administrador (INTERNAL_ANALYST). Público, no requiere token."
+          }
+        },
+        {
+          "name": "02 - Register Teller User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"cajero_01\",\n  \"password\": \"Cajero@2024!\",\n  \"name\": \"Juan Cajero\",\n  \"document\": \"87654321\",\n  \"email\": \"cajero01@bancohardened.com.co\",\n  \"phone\": \"3119876543\",\n  \"address\": \"Carrera 70 # 52-40, Laureles, Medellín\",\n  \"role\": \"TELLER_EMPLOYEE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "register"]
+            },
+            "description": "Crea un usuario cajero (TELLER_EMPLOYEE). Público, no requiere token."
+          }
+        },
+        {
+          "name": "03 - Login Admin (guarda token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set('token', jsonData.token);",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token guardado correctamente');",
+                  "} else {",
+                  "    console.error('No se encontró token en la respuesta');",
+                  "}",
+                  "pm.test('Login exitoso - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Token presente en respuesta', function () {",
+                  "    pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_banco\",\n  \"password\": \"Admin@2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica al admin y guarda el JWT en {{token}} automáticamente."
+          }
+        },
+        {
+          "name": "04 - Login Teller",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login Teller - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Token presente', function () {",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"cajero_01\",\n  \"password\": \"Cajero@2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica al cajero y verifica que el login funciona."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Clients",
+      "item": [
+        {
+          "name": "05 - Create Natural Client 1 (Carlos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente creado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('clientId1', jsonData.id.toString());",
+                  "    pm.environment.set('clientId1', jsonData.id.toString());",
+                  "    console.log('clientId1 guardado:', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos\",\n  \"lastName\": \"García Restrepo\",\n  \"document\": \"1045678901\",\n  \"email\": \"carlos.garcia@gmail.com\",\n  \"phone\": \"3201234567\",\n  \"address\": \"Carrera 43A # 1-50, El Poblado, Medellín\",\n  \"birthDate\": \"1990-05-15\",\n  \"clientStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/natural",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "natural"]
+            },
+            "description": "Registra a Carlos García como cliente persona natural. Guarda su ID en {{clientId1}}."
+          }
+        },
+        {
+          "name": "06 - Create Natural Client 2 (Lucero)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente 2 creado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('clientId2', jsonData.id.toString());",
+                  "    pm.environment.set('clientId2', jsonData.id.toString());",
+                  "    console.log('clientId2 guardado:', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lucero\",\n  \"lastName\": \"Martínez Ospina\",\n  \"document\": \"1023456789\",\n  \"email\": \"lucero.martinez@hotmail.com\",\n  \"phone\": \"3109876543\",\n  \"address\": \"Calle 33 # 76-45, Laureles, Medellín\",\n  \"birthDate\": \"1995-11-22\",\n  \"clientStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/natural",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "natural"]
+            },
+            "description": "Registra a Lucero Martínez como cliente persona natural. Guarda su ID en {{clientId2}}."
+          }
+        },
+        {
+          "name": "07 - Create Corporate Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente corporativo creado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Inversiones Antioqueñas S.A.S.\",\n  \"companyName\": \"Inversiones Antioqueñas S.A.S.\",\n  \"document\": \"900123456\",\n  \"NIT\": \"900123456-3\",\n  \"legalRepresentative\": \"Pedro Álvarez Montoya\",\n  \"email\": \"contacto@inversionesantioquia.com.co\",\n  \"phone\": \"3154567890\",\n  \"address\": \"Calle 10 # 43E-31, El Centro, Medellín\",\n  \"clientStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/corporate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "corporate"]
+            },
+            "description": "Registra una empresa. NIT 900123456-3 con dígito verificador válido."
+          }
+        },
+        {
+          "name": "08 - List All Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listar clientes - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta es arreglo', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients"]
+            },
+            "description": "Devuelve todos los clientes registrados."
+          }
+        },
+        {
+          "name": "09 - Find Client by Document (Carlos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente encontrado - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Documento coincide', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.document).to.equal('1045678901');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/1045678901",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "1045678901"]
+            },
+            "description": "Busca al cliente Carlos García por su número de cédula."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Accounts",
+      "item": [
+        {
+          "name": "10 - Open Savings Account Client 1 (500.000 COP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cuenta creada - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accountNumber) {",
+                  "    pm.collectionVariables.set('accountNumber1', jsonData.accountNumber);",
+                  "    pm.environment.set('accountNumber1', jsonData.accountNumber);",
+                  "    console.log('accountNumber1 guardado:', jsonData.accountNumber);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId1}}\",\n  \"initialDeposit\": 500000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/savings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "savings"]
+            },
+            "description": "Abre una cuenta de ahorros para Carlos con depósito inicial de $500.000 COP. Guarda el número en {{accountNumber1}}."
+          }
+        },
+        {
+          "name": "11 - Open Savings Account Client 2 (0 COP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cuenta 2 creada - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accountNumber) {",
+                  "    pm.collectionVariables.set('accountNumber2', jsonData.accountNumber);",
+                  "    pm.environment.set('accountNumber2', jsonData.accountNumber);",
+                  "    console.log('accountNumber2 guardado:', jsonData.accountNumber);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId2}}\",\n  \"initialDeposit\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/savings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "savings"]
+            },
+            "description": "Abre una cuenta de ahorros para Lucero sin depósito inicial. Guarda el número en {{accountNumber2}}."
+          }
+        },
+        {
+          "name": "12 - Open Checking Account Client 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cuenta corriente creada - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId1}}\",\n  \"initialDeposit\": 200000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/checking",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "checking"]
+            },
+            "description": "Abre una cuenta corriente para Carlos con $200.000 de depósito inicial."
+          }
+        },
+        {
+          "name": "13 - List All Accounts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listar cuentas - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta es arreglo', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts"]
+            },
+            "description": "Lista todas las cuentas bancarias del sistema."
+          }
+        },
+        {
+          "name": "14 - Get Balance Account 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Saldo consultado - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Saldo presente en respuesta', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('balance');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{accountNumber1}}/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{accountNumber1}}", "balance"]
+            },
+            "description": "Consulta el saldo actual de la cuenta de ahorros de Carlos."
+          }
+        },
+        {
+          "name": "15 - List Accounts by Client 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cuentas por cliente - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/client/{{clientId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "client", "{{clientId1}}"]
+            },
+            "description": "Devuelve todas las cuentas asociadas al cliente 1 (Carlos)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Transactions",
+      "item": [
+        {
+          "name": "16 - Deposit to Account 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Depósito realizado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber1}}\",\n  \"amount\": 250000,\n  \"description\": \"Depósito en efectivo - taquilla\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "deposit"]
+            },
+            "description": "Deposita $250.000 COP en la cuenta de Carlos."
+          }
+        },
+        {
+          "name": "17 - Withdrawal from Account 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Retiro realizado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"{{accountNumber1}}\",\n  \"amount\": 50000,\n  \"description\": \"Retiro en cajero automático\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/withdrawal",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "withdrawal"]
+            },
+            "description": "Retira $50.000 COP de la cuenta de Carlos."
+          }
+        },
+        {
+          "name": "18 - Get Transaction History Account 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Historial consultado - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Historial es arreglo', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/account/{{accountNumber1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "account", "{{accountNumber1}}"]
+            },
+            "description": "Devuelve el historial completo de transacciones de la cuenta de Carlos."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Transfers",
+      "item": [
+        {
+          "name": "19 - Request Transfer (C1 → C2, 100.000 COP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Transferencia solicitada - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('transferId', jsonData.id.toString());",
+                  "    pm.environment.set('transferId', jsonData.id.toString());",
+                  "    console.log('transferId guardado:', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountNumber\": \"{{accountNumber1}}\",\n  \"targetAccountNumber\": \"{{accountNumber2}}\",\n  \"amount\": 100000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "request"]
+            },
+            "description": "Solicita una transferencia de $100.000 COP de Carlos a Lucero. Queda en estado PENDING. Guarda el ID en {{transferId}}."
+          }
+        },
+        {
+          "name": "20 - List Pending Transfers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Transferencias pendientes - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "pending"]
+            },
+            "description": "Lista todas las transferencias en estado PENDING que esperan aprobación."
+          }
+        },
+        {
+          "name": "21 - Approve Transfer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Transferencia aprobada - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/{{transferId}}/approve?auditorId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "{{transferId}}", "approve"],
+              "query": [{ "key": "auditorId", "value": "1" }]
+            },
+            "description": "Aprueba la transferencia pendiente. El auditorId=1 corresponde al admin registrado."
+          }
+        },
+        {
+          "name": "21b - Reject Transfer (ejemplo)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/{{transferId}}/reject?reason=Fondos%20insuficientes%20verificados",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "{{transferId}}", "reject"],
+              "query": [{ "key": "reason", "value": "Fondos insuficientes verificados" }]
+            },
+            "description": "Ejemplo de rechazo de transferencia. NO ejecutar después de haber aprobado la misma transferencia."
+          }
+        },
+        {
+          "name": "22 - List All Transfers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listar transferencias - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers"]
+            },
+            "description": "Lista todas las transferencias del sistema (todos los estados)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Loans",
+      "item": [
+        {
+          "name": "23 - Request Loan for Client 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Préstamo solicitado - status 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('loanId', jsonData.id.toString());",
+                  "    pm.environment.set('loanId', jsonData.id.toString());",
+                  "    console.log('loanId guardado:', jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId1}}\",\n  \"amount\": 5000000,\n  \"interestRate\": 1.8,\n  \"termMonths\": 24,\n  \"disbursementAccountId\": \"{{accountNumber1}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/loans/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loans", "request"]
+            },
+            "description": "Solicita un préstamo de $5.000.000 a 24 meses con tasa del 1.8% mensual para Carlos. Desembolsar en su cuenta de ahorros."
+          }
+        },
+        {
+          "name": "24 - Approve Loan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Préstamo aprobado - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/loans/{{loanId}}/approve?adminId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loans", "{{loanId}}", "approve"],
+              "query": [{ "key": "adminId", "value": "1" }]
+            },
+            "description": "El admin aprueba el préstamo solicitado. Cambia el estado a APPROVED."
+          }
+        },
+        {
+          "name": "25 - Disburse Loan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Préstamo desembolsado - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/loans/{{loanId}}/disburse",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loans", "{{loanId}}", "disburse"]
+            },
+            "description": "Desembolsa el préstamo aprobado. Acredita el monto en la cuenta destino de Carlos."
+          }
+        },
+        {
+          "name": "26 - List Loans by Client 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Préstamos por cliente - status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/loans/client/{{clientId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loans", "client", "{{clientId1}}"]
+            },
+            "description": "Lista todos los préstamos de Carlos."
+          }
+        },
+        {
+          "name": "26b - List All Loans",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/loans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "loans"]
+            },
+            "description": "Lista todos los préstamos del sistema."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Validation Tests",
+      "item": [
+        {
+          "name": "27 - TEST: Negative Amount Transfer (→ 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Monto negativo rechazado - status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Mensaje de error presente', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountNumber\": \"{{accountNumber1}}\",\n  \"targetAccountNumber\": \"{{accountNumber2}}\",\n  \"amount\": -50000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "request"]
+            },
+            "description": "CASO NEGATIVO: monto negativo debe retornar 400 Bad Request."
+          }
+        },
+        {
+          "name": "28 - TEST: Insufficient Balance Transfer (→ 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Saldo insuficiente rechazado - status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceAccountNumber\": \"{{accountNumber1}}\",\n  \"targetAccountNumber\": \"{{accountNumber2}}\",\n  \"amount\": 999999999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transfers/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transfers", "request"]
+            },
+            "description": "CASO NEGATIVO: transferir más de lo disponible debe retornar 400 con InsufficientFundsException."
+          }
+        },
+        {
+          "name": "29 - TEST: Duplicate Document Client (→ 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Documento duplicado rechazado - status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Duplicado\",\n  \"lastName\": \"García\",\n  \"document\": \"1045678901\",\n  \"email\": \"carlos.duplicado@gmail.com\",\n  \"phone\": \"3201111111\",\n  \"address\": \"Calle 10 # 20-30, Medellín\",\n  \"birthDate\": \"1992-03-10\",\n  \"clientStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/natural",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "natural"]
+            },
+            "description": "CASO NEGATIVO: registrar un cliente con cédula ya existente debe retornar 400 con DuplicateIdentificationException."
+          }
+        },
+        {
+          "name": "30 - TEST: Invalid Email Client (→ 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Email inválido rechazado - status 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Prueba\",\n  \"lastName\": \"Email Invalido\",\n  \"document\": \"9876543\",\n  \"email\": \"esto-no-es-un-email\",\n  \"phone\": \"3201234599\",\n  \"address\": \"Calle 5 # 10-15, Medellín\",\n  \"birthDate\": \"1988-07-01\",\n  \"clientStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/clients/natural",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients", "natural"]
+            },
+            "description": "CASO NEGATIVO: email con formato inválido debe retornar 400 con InvalidEmailException."
+          }
+        },
+        {
+          "name": "31 - TEST: Wrong Password Login (→ 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Contraseña incorrecta rechazada - status 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin_banco\",\n  \"password\": \"ContraseñaIncorrecta123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "CASO NEGATIVO: credenciales incorrectas deben retornar 401 Unauthorized."
+          }
+        },
+        {
+          "name": "32 - TEST: Access Without Token (→ 401/403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sin token - acceso denegado 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clients"]
+            },
+            "description": "CASO NEGATIVO: acceder a endpoint protegido sin token JWT debe retornar 401 o 403."
+          }
+        }
+      ]
+    }
+  ]
+}
