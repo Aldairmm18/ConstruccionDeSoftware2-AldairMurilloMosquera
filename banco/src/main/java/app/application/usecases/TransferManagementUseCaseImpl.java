@@ -50,7 +50,7 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
 
         // HIGH VALUE LOGIC: if amount > threshold AND source account has CORPORATE client
         if (amount.compareTo(HIGH_VALUE_THRESHOLD) > 0
-                && source.getClient() instanceof CorporateClient) {
+                && ((Client) source.getClient()) instanceof CorporateClient) {
             t.setTransferStatus(TransferStatus.AWAITING_APPROVAL);
         }
 

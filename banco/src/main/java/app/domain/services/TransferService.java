@@ -53,7 +53,7 @@ public class TransferService {
 
         // HIGH VALUE LOGIC: if amount > threshold AND source account is CORPORATE client, set AWAITING_APPROVAL
         if (amount.compareTo(HIGH_VALUE_THRESHOLD) > 0
-                && sourceAccount.getClient() instanceof CorporateClient) {
+                && ((Client) sourceAccount.getClient()) instanceof CorporateClient) {
             transfer.setTransferStatus(TransferStatus.AWAITING_APPROVAL);
         }
 

@@ -12,14 +12,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CorporateClient extends Client {
 
-    private String companyName;
+    private String businessName;
 
-    private String NIT;
+    private String nit;
 
     private String legalRepresentative;
 
+    private String username;
+
     // VALIDACION: NIT con dígito verificador
-    public void setNIT(String nit) {
+    public void setNit(String nit) {
         if (nit == null || nit.isBlank()) {
             throw new InvalidNitException("NIT es obligatorio");
         }
@@ -36,7 +38,7 @@ public class CorporateClient extends Client {
             throw new InvalidNitException("Dígito verificador de NIT inválido");
         }
 
-        this.NIT = nit;
+        this.nit = nit;
     }
 
     private char calcularDVNIT(String nit) {

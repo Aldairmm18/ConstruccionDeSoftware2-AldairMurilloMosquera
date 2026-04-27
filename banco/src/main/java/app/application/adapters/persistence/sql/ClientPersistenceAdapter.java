@@ -116,8 +116,8 @@ public class ClientPersistenceAdapter implements ClientPort {
         entity.setEmail(model.getEmail());
         entity.setPhone(model.getPhone());
         entity.setAddress(model.getAddress());
-        entity.setBusinessName(model.getCompanyName());
-        entity.setNit(model.getNIT());
+        entity.setBusinessName(model.getBusinessName());
+        entity.setNit(model.getNit());
         entity.setLegalRepresentative(model.getLegalRepresentative());
         return entity;
     }
@@ -130,8 +130,8 @@ public class ClientPersistenceAdapter implements ClientPort {
         model.setEmail(entity.getEmail());
         model.setPhone(entity.getPhone());
         model.setAddress(entity.getAddress());
-        model.setCompanyName(entity.getBusinessName());
-        model.setNIT(entity.getNit());
+        model.setBusinessName(entity.getBusinessName());
+        model.setNit(entity.getNit());
         model.setLegalRepresentative(entity.getLegalRepresentative());
         return model;
     }

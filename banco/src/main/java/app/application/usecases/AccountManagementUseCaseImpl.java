@@ -2,17 +2,29 @@ package app.application.usecases;
 
 import app.domain.Exceptions.BusinessException;
 import app.domain.Exceptions.InvalidAmountException;
-import app.domain.models.*;
-import app.domain.ports.*;
+import app.domain.models.AccountStatus;
+import app.domain.models.AccountType;
+import app.domain.models.BankAccount;
+import app.domain.models.Client;
+import app.domain.models.Currency;
+import app.domain.models.OperationsLog;
+import app.domain.models.PersonClient;
+import app.domain.ports.BankAccountPort;
+import app.domain.ports.ClientPort;
+import app.domain.ports.OperationsLogPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
-
-// TODO: Delegate business logic to domain services instead of implementing directly here
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +47,7 @@ public class AccountManagementUseCaseImpl implements AccountManagementUseCase {
     }
 
     private BankAccount openAccount(Long clientId, AccountType type, BigDecimal initialDeposit) {
-        PersonClient client = clientPort.findById(clientId);
+        Client client = clientPort.findById(clientId);
         if (client == null) {
             throw new BusinessException("Client not found");
         }
@@ -52,7 +64,7 @@ public class AccountManagementUseCaseImpl implements AccountManagementUseCase {
         account.setCurrency(Currency.COP);
         account.setCurrentBalance(initialDeposit);
         account.setOpeningDate(LocalDate.now());
-        account.setClient(client);
+        account.setClient((PersonClient) client);
 
         BankAccount saved = bankAccountPort.save(account);
         registerLog("ACCOUNT_OPENED", saved.getId() != null ? saved.getId().toString() : null);
@@ -109,7 +121,7 @@ public class AccountManagementUseCaseImpl implements AccountManagementUseCase {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationType(operation);
-        log.setOperationDateTime(java.time.LocalDateTime.now());
+        log.setOperationDateTime(LocalDateTime.now());
 
         Map<String, Object> details = new HashMap<>();
         details.put("accountId", accountId);
