@@ -25,38 +25,27 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> payload) {
         try {
-            String username = (String) payload.get("username");
-            String password = (String) payload.get("password");
-            String name = (String) payload.get("name");
-            String document = (String) payload.get("document");
-            String email = (String) payload.get("email");
-            String phone = (String) payload.get("phone");
-            String address = (String) payload.get("address");
-            String role = (String) payload.get("role");
-
-            // Check if username already exists
-            if (userPort.findByUsername(username).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
-            }
-
             User user = new User();
-            user.setName(name);
-            user.setDocument(document);
-            user.setEmail(email);
-            user.setPhone(phone);
-            user.setAddress(address);
-            user.setUsername(username);
-            user.setPassword(passwordEncoder.encode(password));
-            user.setSystemRole(SystemRole.valueOf(role));
+            user.setName((String) payload.get("name"));
+            user.setDocument((String) payload.get("document"));
+            user.setEmail((String) payload.get("email"));
+            user.setPhone((String) payload.get("phone"));
+            user.setAddress((String) payload.get("address"));
+            user.setUsername((String) payload.get("username"));
+            user.setPassword(passwordEncoder.encode((String) payload.get("password")));
+            user.setSystemRole(SystemRole.valueOf((String) payload.get("role")));
             user.setUserStatus(UserStatus.ACTIVE);
             user.setBirthDate(LocalDate.of(2000, 1, 1));
 
+            if (userPort.findByUsername(user.getUsername()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Username already exists"));
+            }
+
             User saved = userPort.save(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "id", saved.getId(),
+                "message", "User created successfully",
                 "username", saved.getUsername(),
-                "role", saved.getSystemRole().name(),
-                "status", saved.getUserStatus().name()
+                "role", saved.getSystemRole().name()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
