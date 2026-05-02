@@ -27,10 +27,21 @@ public class OperationsLogPersistenceAdapter implements OperationsLogPort {
 
     @Override
     public List<OperationsLog> findByAffectedProductAccountNumber(String accountNumber) {
-        // CORRECCIÓN 2: Implementación buscando por número de cuenta
         return repository.findByAffectedProductAccountNumber(accountNumber)
                 .stream()
                 .map(OperationsLogEntity::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OperationsLog> findByAffectedProductId(String productId) {
+        // SQL delegates to accountNumber-based search
+        return findByAffectedProductAccountNumber(productId);
+    }
+
+    @Override
+    public List<OperationsLog> findByUserId(Long userId) {
+        // MongoDB is @Primary for OperationsLog; this SQL fallback is not the active implementation
+        return java.util.Collections.emptyList();
     }
 }
