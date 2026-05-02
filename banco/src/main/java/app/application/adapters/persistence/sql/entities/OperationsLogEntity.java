@@ -56,7 +56,15 @@ public class OperationsLogEntity {
       return null;
     }
     OperationsLogEntity entity = new OperationsLogEntity();
-    entity.setId(log.getId());
+    // id is String in domain but Long in SQL — parse only if numeric
+    if (log.getId() != null) {
+      try {
+        entity.setId(Long.parseLong(log.getId()));
+      } catch (NumberFormatException e) {
+        // MongoDB ObjectId or UUID — let SQL generate its own id
+        entity.setId(null);
+      }
+    }
     entity.setLogId(log.getLogId());
     entity.setOperationType(log.getOperationType());
     entity.setOperationDateTime(log.getOperationDateTime());
@@ -72,7 +80,8 @@ public class OperationsLogEntity {
 
   public OperationsLog toDomain() {
     OperationsLog log = new OperationsLog();
-    log.setId(getId());
+    // Convert Long SQL id to String for domain model
+    log.setId(getId() != null ? String.valueOf(getId()) : null);
     log.setLogId(getLogId());
     log.setOperationType(getOperationType());
     log.setOperationDateTime(getOperationDateTime());

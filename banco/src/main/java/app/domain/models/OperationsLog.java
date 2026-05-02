@@ -13,7 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class OperationsLog {
 
-    private Long id;
+    private String id;
 
     private String logId;
 
