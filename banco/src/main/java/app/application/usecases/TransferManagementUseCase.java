@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface TransferManagementUseCase {
     Transfer requestTransfer(String sourceAccountNumber, String targetAccountNumber, BigDecimal amount);
     Transfer approveTransfer(String transferId, String auditorId);
-    Transfer rejectTransfer(String transferId, String reason);
+    Transfer rejectTransfer(String transferId, String auditorId, String reason);
     List<Transfer> findPendingTransfers();
     Optional<Transfer> findById(String id);
     List<Transfer> findAll();

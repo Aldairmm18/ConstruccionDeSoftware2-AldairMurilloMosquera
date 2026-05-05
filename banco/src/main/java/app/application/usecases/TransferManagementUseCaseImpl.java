@@ -21,6 +21,7 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
     private final TransferPort transferPort;
     private final BankAccountPort bankAccountPort;
     private final OperationsLogPort operationsLogPort;
+    private final UserPort userPort;
 
     private static final BigDecimal HIGH_VALUE_THRESHOLD = new BigDecimal("10000000");
 
@@ -62,6 +63,15 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
     @Override
     @Transactional
     public Transfer approveTransfer(String transferId, String auditorId) {
+        User auditor = userPort.findById(Long.parseLong(auditorId));
+        if (auditor == null) {
+            throw new BusinessException("User not found");
+        }
+        if (auditor.getSystemRole() != SystemRole.CORPORATE_SUPERVISOR
+                && auditor.getSystemRole() != SystemRole.INTERNAL_ANALYST) {
+            throw new AccessDeniedException("Only CORPORATE_SUPERVISOR or INTERNAL_ANALYST can approve transfers");
+        }
+
         Transfer t = transferPort.findById(Long.parseLong(transferId));
         if (t == null) {
             throw new BusinessException("Transfer not found");
@@ -97,7 +107,16 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
 
     @Override
     @Transactional
-    public Transfer rejectTransfer(String transferId, String reason) {
+    public Transfer rejectTransfer(String transferId, String auditorId, String reason) {
+        User auditor = userPort.findById(Long.parseLong(auditorId));
+        if (auditor == null) {
+            throw new BusinessException("User not found");
+        }
+        if (auditor.getSystemRole() != SystemRole.CORPORATE_SUPERVISOR
+                && auditor.getSystemRole() != SystemRole.INTERNAL_ANALYST) {
+            throw new AccessDeniedException("Only CORPORATE_SUPERVISOR or INTERNAL_ANALYST can reject transfers");
+        }
+
         Transfer t = transferPort.findById(Long.parseLong(transferId));
         if (t == null) {
             throw new BusinessException("Transfer not found");

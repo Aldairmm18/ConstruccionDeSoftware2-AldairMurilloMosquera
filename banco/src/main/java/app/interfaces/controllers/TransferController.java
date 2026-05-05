@@ -42,9 +42,11 @@ public class TransferController {
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<?> reject(@PathVariable String id, @RequestParam String reason) {
+    public ResponseEntity<?> reject(@PathVariable String id,
+                                     @RequestParam String auditorId,
+                                     @RequestParam String reason) {
         try {
-            return ResponseEntity.ok(transferManagementUseCase.rejectTransfer(id, reason));
+            return ResponseEntity.ok(transferManagementUseCase.rejectTransfer(id, auditorId, reason));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
