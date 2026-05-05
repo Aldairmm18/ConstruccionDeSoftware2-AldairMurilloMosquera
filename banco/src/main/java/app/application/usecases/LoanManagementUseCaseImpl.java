@@ -22,6 +22,7 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
     private final ClientPort clientPort;
     private final BankAccountPort bankAccountPort;
     private final OperationsLogPort operationsLogPort;
+    private final UserPort userPort;
 
     @Override
     @Transactional
@@ -68,6 +69,14 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
     @Override
     @Transactional
     public Loan approveLoan(String loanId, String adminId) {
+        User admin = userPort.findById(Long.parseLong(adminId));
+        if (admin == null) {
+            throw new BusinessException("User not found");
+        }
+        if (admin.getSystemRole() != SystemRole.INTERNAL_ANALYST) {
+            throw new AccessDeniedException("Only INTERNAL_ANALYST can approve/reject loans");
+        }
+
         Loan loan = loanPort.findById(Long.parseLong(loanId));
         if (loan == null) {
             throw new BusinessException("Loan not found");
@@ -86,7 +95,15 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
 
     @Override
     @Transactional
-    public Loan rejectLoan(String loanId, String reason) {
+    public Loan rejectLoan(String loanId, String adminId, String reason) {
+        User admin = userPort.findById(Long.parseLong(adminId));
+        if (admin == null) {
+            throw new BusinessException("User not found");
+        }
+        if (admin.getSystemRole() != SystemRole.INTERNAL_ANALYST) {
+            throw new AccessDeniedException("Only INTERNAL_ANALYST can approve/reject loans");
+        }
+
         Loan loan = loanPort.findById(Long.parseLong(loanId));
         if (loan == null) {
             throw new BusinessException("Loan not found");

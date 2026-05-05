@@ -43,6 +43,17 @@ public class LoanController {
         }
     }
 
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> reject(@PathVariable String id,
+                                     @RequestParam String adminId,
+                                     @RequestParam String reason) {
+        try {
+            return ResponseEntity.ok(loanManagementUseCase.rejectLoan(id, adminId, reason));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/disburse")
     public ResponseEntity<?> disburse(@PathVariable String id) {
         try {

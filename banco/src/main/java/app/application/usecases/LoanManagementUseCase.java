@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface LoanManagementUseCase {
     Loan requestLoan(String clientId, BigDecimal amount, BigDecimal interestRate, int termMonths, String disbursementAccountId);
     Loan approveLoan(String loanId, String adminId);
-    Loan rejectLoan(String loanId, String reason);
+    Loan rejectLoan(String loanId, String adminId, String reason);
     Loan disburseLoan(String loanId);
     List<Loan> findLoansByClient(String clientId);
     Optional<Loan> findById(String id);
