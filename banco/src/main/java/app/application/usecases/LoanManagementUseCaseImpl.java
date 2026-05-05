@@ -89,7 +89,8 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
         loan.setLoanStatus(LoanStatus.APPROVED);
         loan.setApprovalDate(LocalDate.now());
         Loan updated = loanPort.save(loan);
-        registerLog("LOAN_APPROVED", updated.getId() != null ? updated.getId().toString() : null);
+        registerLog("LOAN_APPROVED", updated.getId() != null ? updated.getId().toString() : null,
+                admin.getId(), admin.getUsername());
         return updated;
     }
 
@@ -115,7 +116,8 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
 
         loan.setLoanStatus(LoanStatus.REJECTED);
         Loan updated = loanPort.save(loan);
-        registerLog("LOAN_REJECTED", updated.getId() != null ? updated.getId().toString() : null);
+        registerLog("LOAN_REJECTED", updated.getId() != null ? updated.getId().toString() : null,
+                admin.getId(), admin.getUsername());
         return updated;
     }
 
@@ -158,6 +160,10 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
     }
 
     private void registerLog(String operation, String loanId) {
+        registerLog(operation, loanId, null, null);
+    }
+
+    private void registerLog(String operation, String loanId, Long userId, String username) {
         OperationsLog log = new OperationsLog();
         log.setLogId(UUID.randomUUID().toString());
         log.setOperationType(operation);
@@ -165,6 +171,12 @@ public class LoanManagementUseCaseImpl implements LoanManagementUseCase {
 
         Map<String, Object> details = new HashMap<>();
         details.put("loanId", loanId);
+        if (userId != null) {
+            details.put("performedByUserId", userId);
+        }
+        if (username != null) {
+            details.put("performedByUsername", username);
+        }
         log.setDetailData(details);
 
         operationsLogPort.save(log);

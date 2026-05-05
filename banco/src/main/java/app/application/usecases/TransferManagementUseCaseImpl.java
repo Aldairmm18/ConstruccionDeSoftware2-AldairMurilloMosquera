@@ -155,6 +155,7 @@ public class TransferManagementUseCaseImpl implements TransferManagementUseCase 
             if (t.isExpired()) {
                 t.setTransferStatus(TransferStatus.EXPIRED);
                 transferPort.save(t);
+                registerLog("TRANSFER_EXPIRED", t.getId() != null ? t.getId().toString() : null);
             }
         }
     }
