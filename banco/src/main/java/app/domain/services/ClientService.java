@@ -24,7 +24,33 @@ public class ClientService {
     // ==================== CREATE OPERATIONS ====================
 
     /**
-     * Registers a new natural person client
+     * Saves a pre-constructed natural person client (validates uniqueness and logs)
+     */
+    public PersonClient saveNaturalPerson(PersonClient client) {
+        validateUniqueDocument(client.getDocument());
+        validateUniqueEmail(client.getEmail());
+        client.setClientStatus(ClientStatus.ACTIVE);
+        Client saved = clientPort.save(client);
+        auditService.logOperation("NATURAL_PERSON_REGISTERED",
+                saved.getId() != null ? saved.getId().toString() : null);
+        return (PersonClient) saved;
+    }
+
+    /**
+     * Saves a pre-constructed corporate client (validates uniqueness and logs)
+     */
+    public CorporateClient saveCorporateCompany(CorporateClient company) {
+        validateUniqueDocument(company.getDocument());
+        validateUniqueEmail(company.getEmail());
+        company.setClientStatus(ClientStatus.ACTIVE);
+        Client saved = clientPort.save(company);
+        auditService.logOperation("CORPORATE_CLIENT_REGISTERED",
+                saved.getId() != null ? saved.getId().toString() : null);
+        return (CorporateClient) saved;
+    }
+
+    /**
+     * Registers a new natural person client from primitive fields
      */
     public PersonClient createNaturalPerson(
             String idNumber,

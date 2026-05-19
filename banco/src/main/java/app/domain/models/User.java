@@ -31,8 +31,4 @@ public class User extends Person {
         this.password = newPassword;
     }
 
-    // Plain equals comparison
-    public boolean verifyPassword(String enteredPassword) {
-        return this.password != null && this.password.equals(enteredPassword);
-    }
 }

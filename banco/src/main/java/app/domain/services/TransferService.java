@@ -91,7 +91,7 @@ public class TransferService {
         bankAccountPort.save(targetAccount);
 
         // Update transfer status
-        transfer.setTransferStatus(TransferStatus.APPROVED);
+        transfer.setTransferStatus(TransferStatus.EXECUTED);
         transfer.setApprovalDate(LocalDateTime.now());
 
         Transfer updated = transferPort.save(transfer);

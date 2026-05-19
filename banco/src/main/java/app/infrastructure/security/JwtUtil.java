@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -16,11 +17,11 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    // Ideally, this should be in application.properties
-    private final String SECRET = "EstaEsUnaClaveSuperSecretaParaJJWTAutenticacion2026EnElBanco";
-    
+    @Value("${jwt.secret}")
+    private String secret;
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String extractUsername(String token) {

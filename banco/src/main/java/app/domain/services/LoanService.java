@@ -55,7 +55,7 @@ public class LoanService {
         loan.setRequestedAmount(amount);
         loan.setInterestRate(interestRate);
         loan.setTermMonths(termMonths);
-        loan.setLoanStatus(LoanStatus.PENDING);
+        loan.setLoanStatus(LoanStatus.UNDER_REVIEW);
         loan.setDisbursementTargetAccount(disbursementAccount);
 
         Loan saved = loanPort.save(loan);
@@ -190,9 +190,9 @@ public class LoanService {
     }
 
     private void validatePendingStatus(Loan loan) {
-        if (loan.getLoanStatus() != LoanStatus.PENDING) {
+        if (loan.getLoanStatus() != LoanStatus.UNDER_REVIEW) {
             throw new IllegalStateException(
-                "Solo se pueden procesar préstamos en estado PENDING");
+                "Solo se pueden procesar préstamos en estado UNDER_REVIEW");
         }
     }
 
